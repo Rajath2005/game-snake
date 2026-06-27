@@ -327,7 +327,17 @@ export default function GameCanvas({
     s.shieldCooldown = 0;
     s.cycloneCooldown = 0;
 
-    s.particles = [];
+    s.particles = Array.from({ length: 400 }, () => ({
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      color: "#fff",
+      size: 0,
+      life: 0,
+      maxLife: 0,
+      active: false
+    }));
     s.projectiles = [];
     s.floatingTexts = [];
     s.enemies = [];

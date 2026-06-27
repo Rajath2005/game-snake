@@ -33,7 +33,7 @@ export default function FirstTimeExperience({
         <div className="flex flex-col gap-4 w-full max-w-sm">
           <button 
             onClick={() => {
-              AudioManager.play("click");
+              AudioManager.playButton();
               onStartAdventure();
             }}
             className="w-full py-4 bg-primary text-on-primary rounded-xl font-headline-md font-bold text-lg uppercase tracking-wider hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer flex items-center justify-center gap-2"
@@ -44,7 +44,7 @@ export default function FirstTimeExperience({
           
           <button 
             onClick={() => {
-              AudioManager.play("click");
+              AudioManager.playButton();
               onWatchGameplay();
             }}
             className="w-full py-4 bg-surface-container-high border border-primary/30 text-primary rounded-xl font-headline-md font-bold text-lg uppercase tracking-wider hover:bg-primary/10 transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -55,7 +55,7 @@ export default function FirstTimeExperience({
           
           <button 
             onClick={() => {
-              AudioManager.play("click");
+              AudioManager.playButton();
               onHowToPlay();
             }}
             className="w-full py-4 bg-surface-container-high border border-outline-variant text-on-surface rounded-xl font-headline-md font-bold text-lg uppercase tracking-wider hover:bg-surface-container-highest transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -67,7 +67,7 @@ export default function FirstTimeExperience({
 
         <button 
           onClick={() => {
-            AudioManager.play("click");
+            AudioManager.playButton();
             onSkip();
           }}
           className="mt-8 text-on-surface-variant hover:text-on-surface font-label text-sm uppercase tracking-wider transition-colors underline decoration-on-surface-variant/30 cursor-pointer"
