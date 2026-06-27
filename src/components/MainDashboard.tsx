@@ -546,10 +546,10 @@ export default function MainDashboard({
               <button
                 id="onboarding-play-btn"
                 onClick={onStartGame}
-                className="stone-button w-full py-5 rounded-xl font-headline-md text-xl text-primary flex items-center justify-center gap-3 cursor-pointer select-none font-bold tracking-widest shadow-[0_0_20px_rgba(233,193,118,0.3)] hover:shadow-[0_0_30px_rgba(78,222,163,0.6)] uppercase hover:text-secondary group"
+                className="stone-button w-full py-5 rounded-xl font-headline-md text-xl text-primary flex items-center justify-center gap-3 cursor-pointer select-none font-bold tracking-widest shadow-[0_0_20px_rgba(233,193,118,0.3)] hover:shadow-[0_0_30px_rgba(78,222,163,0.6)] uppercase hover:text-secondary group active:scale-95 transition-transform"
               >
                 <span>ENTER PORTAL</span>
-                <span className="material-symbols-outlined group-hover:translate-x-1.5 transition-transform font-bold">
+                <span className="material-symbols-outlined font-bold">
                   local_fire_department
                 </span>
               </button>
