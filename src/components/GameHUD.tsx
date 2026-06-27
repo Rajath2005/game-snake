@@ -5,8 +5,7 @@ interface GameHUDProps {
   highScore: number;
   souls: number;
   soulProgress: number; // 0 to 100
-  questTarget: number;
-  questCurrent: number;
+  activeObjective: string; // Dynamic quest/objective string
   combo: number;
   hasCrystal: boolean;
   bossActive: boolean;
@@ -24,8 +23,7 @@ export default function GameHUD({
   highScore,
   souls,
   soulProgress,
-  questTarget,
-  questCurrent,
+  activeObjective,
   combo,
   hasCrystal,
   bossActive,
@@ -38,6 +36,21 @@ export default function GameHUD({
   onActivateAbility
 }: GameHUDProps) {
   const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" ? !navigator.onLine : false);
+  const [liveScore, setLiveScore] = useState(score);
+  const [liveSouls, setLiveSouls] = useState(souls);
+
+  useEffect(() => {
+    const handleMetrics = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setLiveScore(customEvent.detail.score);
+        // Display bank souls + run souls during the run
+        setLiveSouls(souls + customEvent.detail.soulsCount);
+      }
+    };
+    window.addEventListener("game-metrics-update", handleMetrics);
+    return () => window.removeEventListener("game-metrics-update", handleMetrics);
+  }, [souls]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -76,7 +89,7 @@ export default function GameHUD({
           <div className="flex flex-col">
             <span className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">Score</span>
             <span className="font-label-numeric text-sm md:text-lg text-primary text-glow-primary font-bold">
-              {padScore(score)}
+              {padScore(liveScore)}
             </span>
           </div>
           <div className="h-6 md:h-8 w-px bg-outline-variant/50" />
@@ -94,7 +107,7 @@ export default function GameHUD({
           <div className="flex items-center gap-1 bg-surface-container p-1 md:p-2 rounded-lg border border-outline-variant/30 shadow-inner">
             <span className="material-symbols-outlined text-secondary font-bold text-xs md:text-sm">eco</span>
             <span className="font-label-numeric text-xs md:text-sm text-secondary text-glow-secondary font-bold">
-              {souls.toLocaleString()}
+              {liveSouls.toLocaleString()}
             </span>
           </div>
           <div className="hidden sm:block flex-1 max-w-[80px] md:max-w-[150px] h-3 md:h-4 bg-surface-container-lowest border border-outline-variant rounded-sm overflow-hidden p-[1px]">
@@ -143,10 +156,7 @@ export default function GameHUD({
       <div className="absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-30 glass-panel px-4 py-2 rounded-lg flex items-center gap-2 border border-primary/30 max-w-[90vw] justify-center">
         <span className="material-symbols-outlined text-primary text-xs sm:text-base animate-bounce">priority_high</span>
         <span className="font-body-lg text-xs sm:text-sm text-on-surface font-semibold truncate">
-          Consume {questTarget} Cursed Souls
-        </span>
-        <span className="font-label-numeric text-xs sm:text-sm text-secondary ml-2 font-bold whitespace-nowrap">
-          {questCurrent}/{questTarget}
+          {activeObjective}
         </span>
       </div>
 

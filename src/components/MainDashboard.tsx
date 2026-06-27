@@ -52,7 +52,7 @@ interface MainDashboardProps {
   onSaveStateUpdate?: (newState: GameSaveState) => void;
 }
 
-type TabType = "BIOMES" | "SHOP" | "TALENTS" | "SKILLS" | "RELICS" | "FORMS" | "CALENDAR" | "PRESTIGE" | "QUESTS";
+type TabType = "BIOMES" | "SHOP" | "TALENTS" | "SKILLS" | "RELICS" | "FORMS" | "CALENDAR" | "PRESTIGE" | "QUESTS" | "HELP";
 
 export default function MainDashboard({
   saveState,
@@ -279,7 +279,8 @@ export default function MainDashboard({
             { id: "FORMS", label: "Forms", icon: "pest_control" },
             { id: "CALENDAR", label: "Daily Calendar", icon: "calendar_month" },
             { id: "PRESTIGE", label: "Prestige", icon: "military_tech" },
-            { id: "QUESTS", label: "Missions", icon: "checklist" }
+            { id: "QUESTS", label: "Missions", icon: "checklist" },
+            { id: "HELP", label: "How To Play", icon: "help" }
           ] as { id: TabType; label: string; icon: string }[]).map((tab) => (
             <button
               key={tab.id}
@@ -332,7 +333,8 @@ export default function MainDashboard({
             { id: "FORMS", label: "Forms", icon: "pest_control" },
             { id: "CALENDAR", label: "Daily", icon: "calendar_month" },
             { id: "PRESTIGE", label: "Prestige", icon: "military_tech" },
-            { id: "QUESTS", label: "Missions", icon: "checklist" }
+            { id: "QUESTS", label: "Missions", icon: "checklist" },
+            { id: "HELP", label: "Help", icon: "help" }
           ] as { id: TabType; label: string; icon: string }[]).map((tab) => (
             <button
               key={tab.id}
@@ -1596,6 +1598,113 @@ export default function MainDashboard({
           </div>
         )}
 
+        {/* TAB 10: HELP / HOW TO PLAY */}
+        {activeTab === "HELP" && (
+          <div className="max-w-4xl mx-auto animate-float pb-20">
+            <h2 className="font-headline-md text-headline-lg text-primary mb-2 flex items-center gap-3 font-bold uppercase tracking-wider text-glow-primary">
+              <span className="material-symbols-outlined text-3xl">help_center</span>
+              How To Play
+            </h2>
+            <p className="text-on-surface-variant font-body mb-10">
+              The ancient codex of the Serpent Kingdom. Read this carefully to survive the dangerous biomes and reclaim your throne.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Objective */}
+              <div className="glass-panel p-6 border-primary/30 rounded-xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                <h3 className="font-headline text-lg text-primary mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-outlined">radar</span>
+                  Objective
+                </h3>
+                <p className="text-sm font-body text-on-surface-variant leading-relaxed">
+                  You are the Ancient Abyssal Serpent. Navigate through realms, devour souls to grow longer, and survive for as long as possible. When your score peaks, a <strong className="text-error">Boss Guardian</strong> will spawn. Defeat them to ascend!
+                </p>
+              </div>
+
+              {/* Controls */}
+              <div className="glass-panel p-6 border-secondary/30 rounded-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                <h3 className="font-headline text-lg text-secondary mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-outlined">gamepad</span>
+                  Controls
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-on-surface mb-1 uppercase tracking-widest">Desktop</h4>
+                    <p className="text-sm text-on-surface-variant"><strong className="text-secondary">W A S D</strong> or <strong className="text-secondary">Arrow Keys</strong> to steer. Alternatively, your serpent automatically follows your mouse cursor.</p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-on-surface mb-1 uppercase tracking-widest">Mobile / Touch</h4>
+                    <p className="text-sm text-on-surface-variant">Tap and <strong className="text-secondary">Swipe/Drag</strong> anywhere on the screen to use the virtual joystick and steer your serpent.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Souls & Growth */}
+              <div className="glass-panel p-6 border-success/30 rounded-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-success" />
+                <h3 className="font-headline text-lg text-success mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-outlined">eco</span>
+                  Souls & Growth
+                </h3>
+                <p className="text-sm font-body text-on-surface-variant leading-relaxed mb-3">
+                  Scattered throughout the map are souls. Eat them to grow your tail and gain score/gold:
+                </p>
+                <ul className="text-sm space-y-2 font-label">
+                  <li className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#4edea3]" /> <span className="text-on-surface">Green (Common)</span></li>
+                  <li className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#e9c176]" /> <span className="text-on-surface">Gold (Rare) - High Gold Value</span></li>
+                  <li className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#f43f5e]" /> <span className="text-on-surface">Red (Cursed) - Bonus XP</span></li>
+                </ul>
+              </div>
+
+              {/* Combat & Bosses */}
+              <div className="glass-panel p-6 border-error/30 rounded-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-error" />
+                <h3 className="font-headline text-lg text-error mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-outlined">swords</span>
+                  Combat & Bosses
+                </h3>
+                <p className="text-sm font-body text-on-surface-variant leading-relaxed">
+                  Avoid running your head directly into enemy attacks. To deal damage, bite enemies with your head, or <strong className="text-error">Whip</strong> them by curling your long tail around them! Defeating normal enemies grants bonus scores and summons the Realm Boss sooner.
+                </p>
+              </div>
+
+              {/* Abilities */}
+              <div className="glass-panel p-6 border-tertiary/30 rounded-xl relative overflow-hidden md:col-span-2">
+                <div className="absolute top-0 left-0 w-1 h-full bg-tertiary" />
+                <h3 className="font-headline text-lg text-tertiary mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-outlined">bolt</span>
+                  Active Abilities
+                </h3>
+                <p className="text-sm font-body text-on-surface-variant leading-relaxed mb-4">
+                  Unlock abilities in the <strong className="text-primary">Skill Tree</strong> tab. Once unlocked, click their icons on the game HUD or use hotkeys:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-surface-container p-3 rounded border border-outline-variant/30">
+                    <h4 className="text-sm font-bold text-on-surface flex justify-between">Dash <span>[SPACE]</span></h4>
+                    <p className="text-xs text-on-surface-variant mt-1">Short invulnerable speed boost. Breaks through enemies.</p>
+                  </div>
+                  <div className="bg-surface-container p-3 rounded border border-outline-variant/30">
+                    <h4 className="text-sm font-bold text-on-surface flex justify-between">Cyclone <span>[Q]</span></h4>
+                    <p className="text-xs text-on-surface-variant mt-1">Fires a massive whirlwind that damages everything in its path.</p>
+                  </div>
+                  <div className="bg-surface-container p-3 rounded border border-outline-variant/30">
+                    <h4 className="text-sm font-bold text-on-surface flex justify-between">Shield <span>[E]</span></h4>
+                    <p className="text-xs text-on-surface-variant mt-1">Creates an impenetrable barrier for several seconds.</p>
+                  </div>
+                  <div className="bg-surface-container p-3 rounded border border-outline-variant/30">
+                    <h4 className="text-sm font-bold text-on-surface flex justify-between">Slow Time <span>[SHIFT]</span></h4>
+                    <p className="text-xs text-on-surface-variant mt-1">Slows all enemies and projectiles, giving you time to react.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* --- SOVEREIGN SANCTUARY & PROFILE MODAL --- */}
@@ -1715,6 +1824,31 @@ export default function MainDashboard({
                         <strong className="text-sm font-bold text-purple-400 font-label-numeric">Rank {saveState.prestigeCount || 0} 👑</strong>
                       </div>
                     </div>
+
+                    <button
+                      onClick={() => {
+                        const text = `I am a Level ${saveState.playerLevel || 1} ${activeTitleObj?.name || "Sovereign"} in the Serpent Kingdom! High Score: ${saveState.highScore.toLocaleString()}. Join my royal clan!`;
+                        if (navigator.share) {
+                          navigator.share({
+                            title: "Serpent Kingdom Progress",
+                            text: text,
+                            url: window.location.href
+                          }).catch(err => {
+                            if ((err as Error).name !== "AbortError") {
+                              navigator.clipboard.writeText(text);
+                              onAlert("Your stats have been copied to the clipboard!", "PROFILE COPIED");
+                            }
+                          });
+                        } else {
+                          navigator.clipboard.writeText(text);
+                          onAlert("Your stats have been copied to the clipboard!", "PROFILE COPIED");
+                        }
+                      }}
+                      className="w-full mt-4 py-2.5 bg-surface-container-highest border border-primary/30 rounded-lg text-primary text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">share</span>
+                      Share My Progress
+                    </button>
                   </div>
 
                   {/* Right: Level & Biome Mastery */}

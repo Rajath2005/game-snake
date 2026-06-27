@@ -11,6 +11,8 @@ interface GameCanvasProps {
   magnetBonus: number;
   goldMultiplier: number;
   cooldownReduction: number;
+  isDemoMode?: boolean;
+  isTutorialMode?: boolean;
   onGameOver: (finalScore: number, coinsEarned: number, xpEarned: number, defeatedBoss: boolean) => void;
   onQuestProgress: (id: string, increment: number) => void;
   isPaused: boolean;
@@ -126,6 +128,8 @@ export default function GameCanvas({
   magnetBonus,
   goldMultiplier,
   cooldownReduction,
+  isDemoMode,
+  isTutorialMode,
   onGameOver,
   onQuestProgress,
   isPaused,
@@ -155,18 +159,22 @@ export default function GameCanvas({
   const tutorialStepRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const gameplayCompleted = localStorage.getItem("serpent_gameplay_tutorial_completed");
-    if (!gameplayCompleted) {
+    if (isTutorialMode) {
       setTutorialStep("MOVEMENT");
       tutorialStepRef.current = "MOVEMENT";
     }
-  }, []);
+  }, [isTutorialMode]);
 
   const transitionTutorialStep = (nextStep: string | null) => {
     tutorialStepRef.current = nextStep;
     setTutorialStep(nextStep);
     if (nextStep === null) {
       localStorage.setItem("serpent_gameplay_tutorial_completed", "true");
+      if (isTutorialMode) {
+        // Reward the player with Coins, XP, Achievement, Starter Chest
+        // Trigger a game over with generous stats
+        onGameOver(5000, 500, 1000, true);
+      }
     }
   };
 
@@ -742,10 +750,18 @@ export default function GameCanvas({
           transitionTutorialStep("GROWTH");
         } else if (tutorialStepRef.current === "GROWTH" && s.serpentSegments.length >= 17) {
           transitionTutorialStep("OBSTACLES");
-        } else if (tutorialStepRef.current === "OBSTACLES" && s.frameCount % 450 === 0) {
+        } else if (tutorialStepRef.current === "OBSTACLES" && s.frameCount > 400) {
           transitionTutorialStep("COMBAT");
         } else if (tutorialStepRef.current === "COMBAT" && s.enemiesKilled > 0) {
           transitionTutorialStep("ABILITIES");
+        } else if (tutorialStepRef.current === "ABILITIES" && (s.dashCooldown > 0 || s.cycloneCooldown > 0 || s.shieldCooldown > 0 || s.slowCooldown > 0)) {
+          transitionTutorialStep("POWERUPS");
+        } else if (tutorialStepRef.current === "POWERUPS" && s.frameCount > 1000) {
+          transitionTutorialStep("BOSS_FIGHT");
+          if (!s.bossActive) spawnBoss(); // Force spawn for tutorial
+        } else if (tutorialStepRef.current === "BOSS_FIGHT" && s.bossActive === false && s.frameCount > 1200) {
+          // Finished the tutorial! (Boss defeated)
+          transitionTutorialStep(null);
         }
       }
 
@@ -871,6 +887,66 @@ export default function GameCanvas({
       const head = s.serpentSegments[0];
       let steeringX = 0;
       let steeringY = 0;
+
+      // DEMO MODE AUTOMATION AI
+      if (isDemoMode) {
+        // AI Steering: Find closest soul or enemy, avoid boss
+        let targetPoint: Point | null = null;
+        let minDistance = Infinity;
+
+        // Try to find a soul
+        for (let i = 0; i < s.souls.length; i++) {
+          const soul = s.souls[i];
+          const dist = Math.hypot(soul.x - head.x, soul.y - head.y);
+          if (dist < minDistance) {
+            minDistance = dist;
+            targetPoint = { x: soul.x, y: soul.y };
+          }
+        }
+
+        // If no soul, wander around center
+        if (!targetPoint) {
+          targetPoint = { 
+            x: (arenaWidth / 2) + Math.cos(s.frameCount * 0.01) * 400, 
+            y: (arenaHeight / 2) + Math.sin(s.frameCount * 0.01) * 400 
+          };
+        }
+
+        // Avoid boss if active
+        if (s.bossActive) {
+           const boss = s.enemies.find(e => e.type === "boss");
+           if (boss) {
+             const distToBoss = Math.hypot(boss.x - head.x, boss.y - head.y);
+             if (distToBoss < 300) {
+               // Steer away
+               targetPoint = {
+                 x: head.x - (boss.x - head.x),
+                 y: head.y - (boss.y - head.y)
+               };
+             } else if (distToBoss > 400) {
+               // Attack boss if safe
+               targetPoint = { x: boss.x, y: boss.y };
+             }
+           }
+        }
+
+        if (targetPoint) {
+          const angleToTarget = Math.atan2(targetPoint.y - head.y, targetPoint.x - head.x);
+          let angleDiff = angleToTarget - s.headingAngle;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          s.headingAngle += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 0.1);
+        }
+
+        // Randomly use abilities
+        if (s.frameCount % 200 === 0 && s.dashCooldown <= 0) {
+           s.targetSpeed = (4 + speedBonus) * 2.8;
+           s.isShielded = true;
+           s.shieldTimer = 35;
+           s.dashCooldown = 6 * (1 - cooldownReduction);
+           triggerParticleBurst(s.serpentSegments[0].x, s.serpentSegments[0].y, "#4edea3", 35);
+        }
+      }
 
       // Keyboard Controls (Smooth rotation or direct WASD)
       if (s.keys["a"] || s.keys["arrowleft"]) {
@@ -1357,16 +1433,15 @@ export default function GameCanvas({
               mx = Math.cos(chargeAngle) * 4.2 * speedFactor;
               my = Math.sin(chargeAngle) * 4.2 * speedFactor;
               if (Math.random() < 0.25) {
-                s.particles.push({
-                  x: enemy.x,
-                  y: enemy.y,
-                  vx: -Math.cos(chargeAngle) * 1.5,
-                  vy: -Math.sin(chargeAngle) * 1.5,
-                  color: "rgba(255,127,116,0.35)",
-                  size: Math.random() * 2 + 1,
-                  life: 0,
-                  maxLife: 15
-                });
+                spawnParticle(
+                  enemy.x,
+                  enemy.y,
+                  -Math.cos(chargeAngle) * 1.5,
+                  -Math.sin(chargeAngle) * 1.5,
+                  "rgba(255,127,116,0.35)",
+                  Math.random() * 2 + 1,
+                  15
+                );
               }
             }
             if (enemy.stateTimer <= 0) {
@@ -1483,16 +1558,15 @@ export default function GameCanvas({
             enemy.isStealth = false;
 
             if (Math.random() < 0.35) {
-              s.particles.push({
-                x: enemy.x,
-                y: enemy.y,
-                vx: 0,
-                vy: 0,
-                color: "rgba(56, 189, 248, 0.4)",
-                size: enemy.size,
-                life: 0,
-                maxLife: 10
-              });
+              spawnParticle(
+                enemy.x,
+                enemy.y,
+                0,
+                0,
+                "rgba(56, 189, 248, 0.4)",
+                enemy.size,
+                10
+              );
             }
             if (enemy.stateTimer <= 0) {
               enemy.state = "stealth";
@@ -2047,20 +2121,7 @@ export default function GameCanvas({
           });
 
           // Explode particles
-          for (let i = 0; i < 35; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 2 + Math.random() * 6;
-            s.particles.push({
-              x: head.x,
-              y: head.y,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed,
-              color: "#f87171",
-              size: 3 + Math.random() * 4,
-              life: 0,
-              maxLife: 40 + Math.random() * 30
-            });
-          }
+          triggerParticleBurst(head.x, head.y, "#f87171", 35);
         } else {
           // Run over! Calculate rewards earned
           const finalCoins = Math.ceil((s.score / 150) * goldMultiplier);
@@ -2090,8 +2151,14 @@ export default function GameCanvas({
       }
 
       // Live metrics state sync for HUD
-      setScore(s.score);
-      setSoulsCount(s.soulsCount);
+      // Using custom event to prevent massive re-renders of GameCanvas
+      const now = Date.now();
+      if (!s.lastEventTime || now - s.lastEventTime > 50) {
+        s.lastEventTime = now;
+        window.dispatchEvent(new CustomEvent('game-metrics-update', {
+          detail: { score: s.score, soulsCount: s.soulsCount }
+        }));
+      }
 
       // 10. DRAWING EVERYTHING (CANVAS RENDERER)
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);

@@ -60,6 +60,10 @@ export default function App() {
   const [bossActive, setBossActive] = useState(false);
   const [bossHealthPercent, setBossHealthPercent] = useState(100);
 
+  // Demo & Tutorial Modes
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isTutorialMode, setIsTutorialMode] = useState(false);
+
   // Custom interactive modal dialog replacing blocking alerts/confirms
   const [modalDialog, setModalDialog] = useState<{
     title: string;
@@ -168,11 +172,70 @@ export default function App() {
     };
   }, []);
 
+  // Idle Demo Mode Detector
+  useEffect(() => {
+    if (screen !== "CAMP" || onboardingActive || welcomeChestActive || showSettings || showAchievementUnlock || modalDialog) return;
+
+    let idleTimer: ReturnType<typeof setTimeout>;
+    
+    const resetTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        setIsDemoMode(true);
+        handleStartGame();
+      }, 25000); // 25 seconds of idle time
+    };
+
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keydown", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
+    window.addEventListener("click", resetTimer);
+    
+    resetTimer();
+
+    return () => {
+      clearTimeout(idleTimer);
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keydown", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+      window.removeEventListener("click", resetTimer);
+    };
+  }, [screen, onboardingActive, welcomeChestActive, showSettings, showAchievementUnlock, modalDialog]);
+
   // Save state to LocalStorage whenever it changes
   const saveToLocalStorage = (newState: GameSaveState) => {
     setSaveState(newState);
     localStorage.setItem("serpent_kingdom_save_v1", JSON.stringify(newState));
   };
+
+  // Cancel Demo Mode on interaction
+  useEffect(() => {
+    if (!isDemoMode || screen !== "GAMEPLAY") return;
+
+    // We add a tiny delay before attaching listeners so the initial click to start doesn't instantly cancel it
+    const timer = setTimeout(() => {
+      const cancelDemo = (e: Event) => {
+        // Prevent canceling if it's the automated cinematic clicks (which we won't have actual clicks for, but just in case)
+        if (!e.isTrusted) return;
+        setIsDemoMode(false);
+        handleCloseGameOver(); // Escapes the game back to dashboard
+      };
+
+      window.addEventListener("mousemove", cancelDemo);
+      window.addEventListener("keydown", cancelDemo);
+      window.addEventListener("touchstart", cancelDemo);
+      window.addEventListener("click", cancelDemo);
+      
+      return () => {
+        window.removeEventListener("mousemove", cancelDemo);
+        window.removeEventListener("keydown", cancelDemo);
+        window.removeEventListener("touchstart", cancelDemo);
+        window.removeEventListener("click", cancelDemo);
+      };
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isDemoMode, screen]);
 
   // Onboarding & Coronation chest handlers
   const handleOnboardingComplete = () => {
@@ -785,6 +848,37 @@ export default function App() {
     });
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: "Serpent Kingdom Score",
+      text: `I scored ${activeRunScore.toLocaleString()} in the Serpent Kingdom! Join my royal clan and reclaim the crown.`,
+      url: window.location.href
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        showCustomAlert("Your royal score has been shared with the realm!", "SHARE SUCCESSFUL");
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Error sharing:", err);
+          copyToClipboard(shareData.text);
+        }
+      }
+    } else {
+      copyToClipboard(shareData.text);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      showCustomAlert("Your royal decree has been copied to the clipboard. Paste it to spread the word!", "COPIED TO SCROLL");
+    }).catch(err => {
+      console.error("Could not copy text: ", err);
+      showCustomAlert(`Score: ${activeRunScore.toLocaleString()}! Spread the word, sovereign!`, "RECONNAISSANCE");
+    });
+  };
+
   // Claim achievement reward
   const handleClaimAchievementRewards = () => {
     // Unlocked standard Slayer of the Serpent King
@@ -914,6 +1008,8 @@ export default function App() {
             cooldownReduction={getCooldownReduction()}
             isPaused={isPaused}
             setIsPaused={setIsPaused}
+            isDemoMode={isDemoMode}
+            isTutorialMode={isTutorialMode}
             onQuestProgress={handleQuestProgress}
             onGameOver={handleGameOver}
             onActiveAbilitiesCooldowns={setAbilitiesCooldowns}
@@ -935,24 +1031,43 @@ export default function App() {
           />
 
           {/* HUD widgets */}
-          <GameHUD
-            score={activeRunScore}
-            highScore={saveState.highScore}
-            souls={saveState.souls}
-            soulProgress={(saveState.souls / 15) * 100} // dynamic tier loop
-            questTarget={5}
-            questCurrent={saveState.quests.find(q => q.id === "quest_1")?.current || 0}
-            combo={3} // default starting base or dynamic from canvas
-            hasCrystal={saveState.crystals >= 10}
-            bossActive={bossActive}
-            bossHealthPercent={bossHealthPercent}
-            dashCooldown={abilitiesCooldowns.dash}
-            slowCooldown={abilitiesCooldowns.slow}
-            shieldCooldown={abilitiesCooldowns.shield}
-            cycloneCooldown={abilitiesCooldowns.cyclone}
-            onPauseToggle={() => setIsPaused(!isPaused)}
-            onActivateAbility={(ability) => setActiveAbilityTrigger(ability)}
-          />
+          {!isDemoMode && (
+            <GameHUD
+              score={activeRunScore}
+              highScore={saveState.highScore}
+              souls={saveState.souls}
+              soulProgress={(saveState.souls / 15) * 100} // dynamic tier loop
+              activeObjective={
+                bossActive 
+                  ? "DEFEAT THE BOSS GUARDIAN" 
+                  : (saveState.quests.find(q => !q.isCompleted && q.current < q.target)
+                      ? `${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.title} (${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.current}/${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.target})`
+                      : "Survive and grow stronger!")
+              }
+              combo={3} // default starting base or dynamic from canvas
+              hasCrystal={saveState.crystals >= 10}
+              bossActive={bossActive}
+              bossHealthPercent={bossHealthPercent}
+              dashCooldown={abilitiesCooldowns.dash}
+              slowCooldown={abilitiesCooldowns.slow}
+              shieldCooldown={abilitiesCooldowns.shield}
+              cycloneCooldown={abilitiesCooldowns.cyclone}
+              onPauseToggle={() => setIsPaused(!isPaused)}
+              onActivateAbility={(ability) => setActiveAbilityTrigger(ability)}
+            />
+          )}
+
+          {/* Demo Mode Overlay Text */}
+          {isDemoMode && (
+             <div className="absolute top-12 left-1/2 -translate-x-1/2 z-50 animate-pulse text-center pointer-events-none">
+               <h1 className="font-headline text-2xl md:text-4xl text-primary font-bold uppercase tracking-widest text-glow-primary">
+                 Cinematic Demo Mode
+               </h1>
+               <p className="text-white font-body text-sm mt-2 opacity-80 uppercase tracking-widest">
+                 Press any key or click to play
+               </p>
+             </div>
+          )}
 
           {/* Pause overlay screen indicator */}
           {isPaused && (
@@ -996,7 +1111,7 @@ export default function App() {
           xpEarned={activeRunXp}
           onRetry={handleStartGame}
           onContinue={handleCloseGameOver}
-          onShare={() => showCustomAlert(`I scored ${activeRunScore.toLocaleString()} in the Serpent Kingdom! Join my royal clan.`, "RECONNAISSANCE")}
+          onShare={handleShare}
           onOpenLeaderboard={() => showCustomAlert("Retrieving Royal Leaderboards from local vault...", "VAULT ACCESS")}
         />
       )}
@@ -1049,9 +1164,21 @@ export default function App() {
       {/* 8. ONBOARDING OVERLAY */}
       {onboardingActive && (
         <OnboardingOverlay
-          onComplete={handleOnboardingComplete}
+          onStartAdventure={() => {
+            handleOnboardingComplete();
+            setIsTutorialMode(true);
+            handleStartGame();
+          }}
+          onWatchGameplay={() => {
+            handleOnboardingComplete();
+            setIsDemoMode(true);
+            handleStartGame();
+          }}
+          onHowToPlay={() => {
+            handleOnboardingSkip();
+            setDashboardActiveTab("HELP"); // We'll need to create a HELP tab or a modal
+          }}
           onSkip={handleOnboardingSkip}
-          onStepChange={setDashboardActiveTab}
         />
       )}
 
