@@ -1173,8 +1173,6 @@ export default function App() {
           }}
           onHowToPlay={() => {
             handleOnboardingComplete();
-            setIsTutorialMode(true);
-            handleStartGame();
           }}
           onSkip={handleOnboardingSkip}
         />
