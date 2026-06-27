@@ -1,0 +1,6 @@
+{
+  "name": "The Serpent Kingdom",
+  "description": "A cinematic dark fantasy action survival game where you control an ancient Serpent King. Grow stronger by consuming souls, unlock abilities, and fight ancient horrors in this roguelite adventure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Fonts mapping */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-cinzel: "Cinzel", serif;
+  --font-orbitron: "Orbitron", monospace;
+
+  --font-label-sm: "Inter", sans-serif;
+  --font-headline-md: "Cinzel", serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-display-lg: "Cinzel", serif;
+  --font-display-lg-mobile: "Cinzel", serif;
+  --font-body-md: "Inter", sans-serif;
+  --font-label-numeric: "Orbitron", monospace;
+
+  /* Colors defined in DESIGN.md */
+  --color-background: #131313;
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-surface-bright: #3a3939;
+  
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+  --color-surface-variant: #353534;
+
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #d1c5b4;
+  --color-inverse-surface: #e5e2e1;
+  --color-inverse-on-surface: #313030;
+
+  --color-outline: #9a8f80;
+  --color-outline-variant: #4e4639;
+  --color-surface-tint: #e9c176;
+
+  --color-primary: #e9c176;
+  --color-on-primary: #412d00;
+  --color-primary-container: #c5a059;
+  --color-on-primary-container: #4e3700;
+  --color-inverse-primary: #775a19;
+
+  --color-secondary: #4edea3;
+  --color-on-secondary: #003824;
+  --color-secondary-container: #00a572;
+  --color-on-secondary-container: #00311f;
+
+  --color-tertiary: #ffb4ac;
+  --color-on-tertiary: #690007;
+  --color-tertiary-container: #ff7f74;
+  --color-on-tertiary-container: #7d000a;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --color-primary-fixed: #ffdea5;
+  --color-primary-fixed-dim: #e9c176;
+  --color-on-primary-fixed: #261900;
+  --color-on-primary-fixed-variant: #5d4201;
+
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+
+  --color-tertiary-fixed: #ffdad6;
+  --color-tertiary-fixed-dim: #ffb4ac;
+  --color-on-tertiary-fixed: #410002;
+  --color-on-tertiary-fixed-variant: #8e1214;
+}
+
+/* Custom Base Utility Styles */
+@layer utilities {
+  .glass-panel {
+    background: rgba(28, 27, 27, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(233, 193, 118, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+  }
+
+  .stone-button {
+    background: linear-gradient(180deg, #353534 0%, #201f1f 100%);
+    border: 1px solid #e9c176;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .stone-button:hover {
+    box-shadow: 0 0 15px rgba(78, 222, 163, 0.6);
+    border-color: #4edea3;
+  }
+
+  .emerald-glow {
+    text-shadow: 0 0 15px rgba(78, 222, 163, 0.8);
+  }
+
+  .gold-glow {
+    text-shadow: 0 0 15px rgba(233, 193, 118, 0.8);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 15px rgba(78, 222, 163, 0.6);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 15px rgba(233, 193, 118, 0.6);
+  }
+
+  .text-glow-primary {
+    text-shadow: 0 0 10px rgba(233, 193, 118, 0.5);
+  }
+
+  .text-glow-secondary {
+    text-shadow: 0 0 10px rgba(78, 222, 163, 0.5);
+  }
+
+  .cleft-input {
+    background-color: #0e0e0e;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+    border-top: 1px solid rgba(0,0,0,0.5);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .btn-stone-inlay {
+    background: #201f1f;
+    border: 1px solid #e9c176;
+    transition: all 0.3s ease;
+  }
+  .btn-stone-inlay:hover {
+    border-color: #4edea3;
+    box-shadow: 0 0 15px rgba(78, 222, 163, 0.4);
+  }
+
+  .card-glow:hover {
+    box-shadow: 0 0 20px rgba(233, 193, 118, 0.3);
+    border-color: #e9c176;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Base Body settings */
+body {
+  background-color: #131313;
+  color: #e5e2e1;
+  font-family: "Inter", sans-serif;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes spin-rune {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.rune-spin {
+  animation: spin-rune 12s linear infinite;
+}
+
+@keyframes drift-embers {
+  0% { transform: translateY(100vh) translateX(0) scale(1); opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { transform: translateY(-10vh) translateX(50px) scale(0.5); opacity: 0; }
+}
+
+/* Particle support classes */
+.ambient-ember {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  animation: drift-embers linear infinite;
+}
