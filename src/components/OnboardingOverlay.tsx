@@ -74,7 +74,24 @@ export default function OnboardingOverlay({ onComplete, onSkip, onStepChange }: 
     if (activeStepObj.tabToActivate && onStepChange) {
       onStepChange(activeStepObj.tabToActivate);
     }
-  }, [currentStep, activeStepObj.tabToActivate]);
+  }, [currentStep, activeStepObj.tabToActivate, onStepChange]);
+
+  // Scroll target element into view when step changes
+  useEffect(() => {
+    if (activeStepObj.targetId) {
+      // Small delay to allow any tab rendering to occur first
+      const timer = setTimeout(() => {
+        let el = document.getElementById(activeStepObj.targetId!);
+        if (!el) {
+          el = document.getElementById(activeStepObj.targetId!.replace("onboarding-tab-", "onboarding-tab-mobile-"));
+        }
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, activeStepObj.targetId]);
 
   // Track the bounding box of the highlighted element
   useEffect(() => {
