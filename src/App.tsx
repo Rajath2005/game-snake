@@ -1163,7 +1163,7 @@ export default function App() {
         <OnboardingOverlay
           onStartAdventure={() => {
             handleOnboardingComplete();
-            setIsTutorialMode(true);
+            setIsTutorialMode(false);
             handleStartGame();
           }}
           onWatchGameplay={() => {
@@ -1172,8 +1172,9 @@ export default function App() {
             handleStartGame();
           }}
           onHowToPlay={() => {
-            handleOnboardingSkip();
-            setDashboardActiveTab("HELP"); // We'll need to create a HELP tab or a modal
+            handleOnboardingComplete();
+            setIsTutorialMode(true);
+            handleStartGame();
           }}
           onSkip={handleOnboardingSkip}
         />

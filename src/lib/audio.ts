@@ -101,7 +101,14 @@ class AudioManagerClass {
    * Updates settings and real-time gain node levels.
    */
   public updateSettings(newSettings: GameSettings) {
-    this.settings = { ...newSettings };
+    this.settings = {
+      masterVolume: newSettings?.masterVolume ?? 80,
+      musicVolume: newSettings?.musicVolume ?? 80,
+      sfxVolume: newSettings?.sfxVolume ?? 80,
+      cameraShake: newSettings?.cameraShake ?? true,
+      visualEffects: newSettings?.visualEffects ?? "HIGH",
+      showDamageNumbers: newSettings?.showDamageNumbers ?? true,
+    };
     this.applyGains();
   }
 

@@ -158,17 +158,6 @@ export default function GameCanvas({
   const [tutorialStep, setTutorialStep] = useState<string | null>(null);
   const tutorialStepRef = useRef<string | null>(null);
 
-  const [isPortrait, setIsPortrait] = useState(false);
-
-  useEffect(() => {
-    const checkOrientation = () => {
-      setIsPortrait(window.innerHeight > window.innerWidth);
-    };
-    checkOrientation();
-    window.addEventListener("resize", checkOrientation);
-    return () => window.removeEventListener("resize", checkOrientation);
-  }, []);
-
   useEffect(() => {
     if (isTutorialMode) {
       setTutorialStep("MOVEMENT");
@@ -2929,8 +2918,8 @@ export default function GameCanvas({
         </div>
       )}
 
-      {isPortrait && !isDemoMode && (
-        <div className="absolute inset-0 bg-background/95 z-[100] flex flex-col items-center justify-center p-6 text-center backdrop-blur-md">
+      {!isDemoMode && (
+        <div className="portrait-warning absolute inset-0 bg-background/95 z-[100] flex-col items-center justify-center p-6 text-center backdrop-blur-md hidden landscape:hidden portrait:flex">
           <span className="material-symbols-outlined text-primary text-6xl mb-4 animate-pulse">screen_rotation</span>
           <h2 className="font-headline text-2xl text-primary font-bold uppercase tracking-widest mb-2">Rotate Device</h2>
           <p className="text-on-surface-variant font-body text-sm mb-6 max-w-sm leading-relaxed">
