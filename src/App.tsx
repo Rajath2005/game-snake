@@ -212,29 +212,26 @@ export default function App() {
   useEffect(() => {
     if (!isDemoMode || screen !== "GAMEPLAY") return;
 
-    // We add a tiny delay before attaching listeners so the initial click to start doesn't instantly cancel it
-    const timer = setTimeout(() => {
-      const cancelDemo = (e: Event) => {
-        // Prevent canceling if it's the automated cinematic clicks (which we won't have actual clicks for, but just in case)
-        if (!e.isTrusted) return;
-        setIsDemoMode(false);
-        handleCloseGameOver(); // Escapes the game back to dashboard
-      };
+    const cancelDemo = (e: Event) => {
+      if (!e.isTrusted) return;
+      setIsDemoMode(false);
+      handleCloseGameOver(); // Escapes the game back to dashboard
+    };
 
+    const timer = setTimeout(() => {
       window.addEventListener("mousemove", cancelDemo);
       window.addEventListener("keydown", cancelDemo);
       window.addEventListener("touchstart", cancelDemo);
       window.addEventListener("click", cancelDemo);
-      
-      return () => {
-        window.removeEventListener("mousemove", cancelDemo);
-        window.removeEventListener("keydown", cancelDemo);
-        window.removeEventListener("touchstart", cancelDemo);
-        window.removeEventListener("click", cancelDemo);
-      };
     }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("mousemove", cancelDemo);
+      window.removeEventListener("keydown", cancelDemo);
+      window.removeEventListener("touchstart", cancelDemo);
+      window.removeEventListener("click", cancelDemo);
+    };
   }, [isDemoMode, screen]);
 
   // Onboarding & Coronation chest handlers
@@ -1183,7 +1180,7 @@ export default function App() {
       )}
 
       {/* 9. WELCOME CORONATION CHEST */}
-      {welcomeChestActive && (
+      {welcomeChestActive && screen === "CAMP" && (
         <WelcomeChestModal
           onClaim={handleClaimWelcomeChest}
         />
