@@ -3,6 +3,7 @@
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/Version-1.0.0-orange.svg?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome" />
+  <a href="https://www.codetriage.com/rajath2005/game-snake"><img src="https://www.codetriage.com/rajath2005/game-snake/badges/users.svg?count=1" alt="CodeTriage badge for rajath2005/game-snake" /></a>
   <img src="https://img.shields.io/badge/React-18-61DAFB.svg?style=for-the-badge&logo=react" alt="React" />
   <img src="https://img.shields.io/badge/Tailwind-3.0-38B2AC.svg?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
 </div>
