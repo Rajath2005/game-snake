@@ -7,10 +7,13 @@
   <img src="https://img.shields.io/badge/Tailwind-3.0-38B2AC.svg?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
 </div>
 
-<h1 align="center">🐍 The Serpent Kingdom</h1>
+<h1 align="center">
+  <img src="public/favicon.svg" width="32" height="32" style="vertical-align: middle; margin-right: 12px; border-radius: 8px;" alt="Logo" />
+  The Serpent Kingdom
+</h1>
 
 <div align="center">
-  <p><strong>An epic roguelite survival game built with React, Vite, and Tailwind CSS.</strong></p>
+  <p><strong>An epic, browser-based roguelite survival game built with React, Vite, and HTML5 Canvas.</strong></p>
   <p>
     <a href="README.md">English</a>
     ·
@@ -30,56 +33,58 @@
 
 ## 📖 Overview
 
-**The Serpent Kingdom** is a browser-based, action-packed roguelite game inspired by classic snake mechanics but elevated to modern standards. Play as the Ancient Abyssal Serpent, consume souls to grow, unlock eldritch abilities, and conquer Dimensional Bosses to reclaim your throne! 
+**The Serpent Kingdom** is a highly polished, action-packed roguelite game inspired by classic snake mechanics, elevated to modern survival-action standards. You play as the Ancient Abyssal Serpent. Navigate treacherous realms, consume glowing souls to grow your body, unlock eldritch abilities, and conquer Dimensional Bosses to reclaim your lost throne! 
 
-Navigate treacherous realms, collect rare relics, upgrade your skill tree, and rise on the global leaderboards in this highly replayable survival experience. We've open-sourced this project to allow the community to build new biomes, enemies, and skills!
+We've open-sourced this project to allow the community to build new biomes, enemies, and skills!
 
-## 📸 Screenshots
+## 📸 In-Game Screenshots
 
-<details>
-<summary>Click to view screenshots of the game</summary>
+<details open>
+<summary><b>Click to toggle screenshots</b></summary>
+<br/>
 
-| Main Dashboard | Gameplay / Combat | Skill Tree |
+| **Camp Dashboard (Progression UI)** | **Intense Boss Battles** | **Deep Skill Trees** |
 | :---: | :---: | :---: |
-| <img src="https://placehold.co/600x400/1e1e2e/a6e3a1?text=Main+Dashboard" alt="Main Dashboard" width="300"/> | <img src="https://placehold.co/600x400/1e1e2e/f38ba8?text=Boss+Fight" alt="Boss Fight" width="300"/> | <img src="https://placehold.co/600x400/1e1e2e/89b4fa?text=Skill+Tree" alt="Skill Tree" width="300"/> |
+| <img src="https://placehold.co/600x400/0f172a/4ade80?text=Camp+Dashboard%0A%0AStats,+Artifacts,+Skins" alt="Camp Dashboard" /> | <img src="https://placehold.co/600x400/0f172a/f87171?text=Boss+Encounters%0A%0ABullet+Hell+%26+Dodging" alt="Boss Encounters" /> | <img src="https://placehold.co/600x400/0f172a/3b82f6?text=Skill+Trees%0A%0AChrono+Shift,+Ragnarok" alt="Skill Trees" /> |
 
+*(Note: Screenshots are representative of the in-game UI. Run the project locally to see the stunning 60FPS particle effects and animations!)*
 </details>
 
 ---
 
-## ✨ Features
+## ✨ Features & Game Systems
 
 ### 🎮 Dynamic Action Gameplay
-- **Silky Smooth Engine:** A heavily optimized 2D canvas-based engine running at 60+ FPS.
-- **Responsive Controls:** Play anywhere. Supports desktop (WASD, Arrow Keys, Mouse follow) and mobile (Virtual Joystick/Touch).
+- **Silky Smooth Engine:** A heavily optimized 2D canvas-based engine running at 60+ FPS with hundreds of active entities, particles, and projectiles.
+- **Responsive Controls:** Play anywhere. Supports desktop (WASD, Arrow Keys, Mouse-follow) and mobile (Virtual Joystick and Touch controls).
 - **Tactical Combat:** Bite enemies with your head or perform a "Whip" attack by curling your long tail around them!
 
 ### 🐉 Deep Roguelite Progression
-- **Skill Tree:** Unlock powerful active abilities like *Cyclone*, *Divine Shield*, and *Slow Time*.
-- **Talents:** Invest your gold into permanent passive upgrades to start stronger each run.
-- **Relics & Artifacts:** Customize your build with gameplay-altering items found in the Vault.
-- **Serpent Forms:** Change your visual appearance and gain unique elemental boosts (e.g., *Obsidian*, *Void*, *Infernal*).
+- **Skill Tree:** Unlock powerful active abilities during your run, including *Fang Poison*, *Body Armor*, *Spark Magic*, *Chrono Shift*, *Blood Feast*, *Void Magnet*, *Ragnarok*, and *Serpent Tempest*.
+- **Talents:** Invest your gold into permanent passive upgrades (*Max Health*, *Speed*, *Magnet Range*, *Soul Multiplier*) to start stronger each run.
+- **Relics & Artifacts:** Customize your build with gameplay-altering items found in the Vault, such as the *Hourglass*, *Soul Urn*, *Crown of Greed*, *Phoenix Ash*, and the *Vampiric Skull*.
+- **Serpent Skins (Forms):** Change your visual appearance and gain unique elemental boosts. Unlock forms like *Sovereign Obsidian*, *Jade Basilisk*, *Crimson Dread*, and *Shadow Hydra*.
 
 ### 👹 Epic Content
-- **Boss Fights:** Survive until your score peaks and face off against formidable Boss Guardians with unique attack patterns (bullet hell mechanics!).
-- **Multiple Biomes:** Explore distinct environments, from *The Abyss* and *Haunted Forest* to the *Frozen Kingdom* and *Volcanic Ruins*.
-- **Achievements & Quests:** Complete daily missions and lifetime achievements to earn massive rewards.
+- **Boss Fights:** Survive the escalating waves and face off against formidable Boss Guardians with unique bullet-hell attack patterns.
+- **Multiple Biomes:** Explore distinct environments with unique aesthetics: *The Abyss*, *Haunted Forest*, *Frozen Kingdom*, and *Volcanic Ruins*.
+- **Achievements & Quests:** Complete daily missions and lifetime achievements to earn Gold, Souls, and rare Crystals. Features dynamic titles like *Soul Reaper* and *Eldritch Demigod*.
 
 ### 🎓 Immersive Onboarding
-- **UI Tour:** A cinematic, interactive UI tour explaining the progression systems.
-- **Gameplay Tutorial:** A step-by-step interactive match that teaches movement, combat, abilities, and boss encounters.
+- **Cinematic UI Tour:** A cinematic, interactive interface tour explaining all progression systems to new players.
+- **Gameplay Tutorial:** A step-by-step interactive match that teaches movement, combat, using abilities, and Boss encounters.
 
 ---
 
 ## 🛠️ Tech Stack
 
-This project leverages modern web technologies to deliver a high-performance gaming experience in the browser:
+This project leverages modern Web technologies to deliver a high-performance gaming experience in the browser:
 
 - **Framework**: [React 18](https://react.dev/)
 - **Build Tool**: [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Game Engine**: Custom HTML5 `<canvas>` API rendering
-- **State Management**: React Hooks + Context / LocalStorage for persistent saves
+- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/)
+- **Game Engine**: Custom HTML5 `<canvas>` rendering loop (Zero external game engine dependencies)
+- **State Management**: React Hooks + Context + Persistent LocalStorage for game saves
 - **Icons**: [Google Material Symbols](https://fonts.google.com/icons)
 - **Deployment**: Optimized for standard static hosting (Vercel, Netlify, Cloud Run, GitHub Pages)
 
@@ -126,9 +131,9 @@ The compiled static files will be located in the `dist` directory, ready to be s
 ```text
 serpent-kingdom/
 ├── src/
-│   ├── components/      # React components (Dashboard, Modals, Canvas)
+│   ├── components/      # React components (UI panels, Modals, Canvas)
 │   │   ├── GameCanvas.tsx       # Core game engine and rendering loop
-│   │   ├── MainDashboard.tsx    # Out-of-game progression UI
+│   │   ├── MainDashboard.tsx    # Out-of-game progression & Camp UI
 │   │   ├── UITourOverlay.tsx    # Interactive onboarding tour
 │   │   └── ...
 │   ├── lib/             # Utilities and Managers
@@ -138,7 +143,7 @@ serpent-kingdom/
 │   ├── index.css        # Tailwind CSS imports and global styles
 │   ├── main.tsx         # React DOM renderer
 │   └── types.ts         # TypeScript interfaces and game data definitions
-├── public/              # Static assets (images, audio files)
+├── public/              # Static assets (images, audio files, favicon)
 ├── package.json         # Dependencies and scripts
 ├── vite.config.ts       # Vite build configuration
 └── tailwind.config.js   # Tailwind theme definitions
@@ -148,14 +153,14 @@ serpent-kingdom/
 
 ## 🕹️ How to Play
 
-1. **Movement**: Use `W`, `A`, `S`, `D`, `Arrow Keys`, or move your `Mouse` to steer. On mobile, touch and drag to use the virtual joystick.
-2. **Collect Souls**: Devour glowing souls to grow your tail and earn score/gold.
+1. **Movement**: Use `W`, `A`, `S`, `D`, `Arrow Keys`, or move your `Mouse` to steer. On mobile, touch and drag anywhere to use the virtual joystick.
+2. **Collect Souls**: Devour glowing souls dropped by enemies to grow your tail and earn score/gold.
     - 🟢 *Green*: Common (Score/Gold)
     - 🟡 *Gold*: Rare (High Gold)
     - 🔴 *Red*: Cursed (Bonus XP)
 3. **Avoid Attacks**: Dodge enemy projectiles. Your head is vulnerable, but your body can withstand hits!
-4. **Combat**: Defeat normal enemies by biting them or wrapping your body around them. This summons the Realm Boss sooner.
-5. **Survive & Ascend**: Use your unlocked abilities (Dash, Shield, Cyclone), defeat the Realm Boss, and extract with your loot!
+4. **Combat**: Defeat normal enemies by biting them or wrapping your body around them to crush them. This summons the Realm Boss sooner.
+5. **Survive & Ascend**: Use your unlocked abilities, defeat the Realm Boss, and extract with your loot to upgrade your Serpent at the Camp!
 
 ---
 
@@ -181,7 +186,7 @@ We welcome contributions from the open-source community! Whether you are fixing 
 
 ## 🗺️ Roadmap
 
-- [ ] **Multiplayer Leaderboards:** Integrate a real backend (e.g., Firebase) for global high scores.
+- [ ] **Multiplayer Leaderboards:** Integrate a backend (e.g., Firebase) for global high scores.
 - [ ] **Controller Support:** Add Gamepad API support for console controllers.
 - [ ] **New Biomes:** Add *The Celestial Realm* and *The Sunken City*.
 - [ ] **Modding API:** Expose hooks for the community to easily add custom Serpent Forms.

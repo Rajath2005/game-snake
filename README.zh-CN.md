@@ -7,10 +7,13 @@
   <img src="https://img.shields.io/badge/Tailwind-3.0-38B2AC.svg?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
 </div>
 
-<h1 align="center">🐍 巨蛇王国 (The Serpent Kingdom)</h1>
+<h1 align="center">
+  <img src="public/favicon.svg" width="32" height="32" style="vertical-align: middle; margin-right: 12px; border-radius: 8px;" alt="Logo" />
+  巨蛇王国 (The Serpent Kingdom)
+</h1>
 
 <div align="center">
-  <p><strong>一款基于 React、Vite 和 Tailwind CSS 构建的史诗级 Roguelite 生存游戏。</strong></p>
+  <p><strong>一款基于 React、Vite 和 HTML5 Canvas 构建的史诗级 Roguelite 生存游戏。</strong></p>
   <p>
     <a href="README.md">English</a>
     ·
@@ -30,44 +33,46 @@
 
 ## 📖 简介
 
-**《巨蛇王国》 (The Serpent Kingdom)** 是一款基于浏览器的动作类 Roguelite 游戏，灵感来源于经典的贪吃蛇机制，并将其提升到了现代游戏的标准。扮演远古深渊巨蛇，吞噬灵魂以成长，解锁神秘能力，并击败维度首领来夺回你的王座！
+**《巨蛇王国》 (The Serpent Kingdom)** 是一款基于浏览器的动作类 Roguelite 游戏，灵感来源于经典的贪吃蛇机制，并将其提升到了现代生存动作游戏的标准。你将扮演远古深渊巨蛇，在危险重重的境界中穿梭，吞噬发光的灵魂以成长，解锁神秘的法术能力，并击败维度首领来夺回你失去的王座！
 
-在危险重重的境界中穿梭，收集稀有遗物，升级你的技能树，并在这款极具重玩价值的生存体验中攀登全球排行榜。我们已将此项目开源，以允许社区添加新的生物群落、敌人和技能！
+我们已将此项目开源，以允许社区添加新的生物群落、敌人和技能！
 
 ## 📸 游戏截图
 
-<details>
-<summary>点击查看游戏截图</summary>
+<details open>
+<summary><b>点击展开/折叠游戏截图</b></summary>
+<br/>
 
-| 主界面 (Main Dashboard) | 战斗界面 (Gameplay) | 技能树 (Skill Tree) |
+| **营地大厅 (Progression UI)** | **激烈的首领战** | **深度的技能树** |
 | :---: | :---: | :---: |
-| <img src="https://placehold.co/600x400/1e1e2e/a6e3a1?text=Main+Dashboard" alt="Main Dashboard" width="300"/> | <img src="https://placehold.co/600x400/1e1e2e/f38ba8?text=Boss+Fight" alt="Boss Fight" width="300"/> | <img src="https://placehold.co/600x400/1e1e2e/89b4fa?text=Skill+Tree" alt="Skill Tree" width="300"/> |
+| <img src="https://placehold.co/600x400/0f172a/4ade80?text=Camp+Dashboard%0A%0AStats,+Artifacts,+Skins" alt="Camp Dashboard" /> | <img src="https://placehold.co/600x400/0f172a/f87171?text=Boss+Encounters%0A%0ABullet+Hell+%26+Dodging" alt="Boss Encounters" /> | <img src="https://placehold.co/600x400/0f172a/3b82f6?text=Skill+Trees%0A%0AChrono+Shift,+Ragnarok" alt="Skill Trees" /> |
 
+*(注：截图仅展示 UI 界面。请在本地运行项目以体验极其流畅的 60 帧粒子特效与动画！)*
 </details>
 
 ---
 
-## ✨ 核心特色
+## ✨ 核心特色与游戏系统
 
-### 🎮 动感十足的玩法
-- **极致流畅的引擎:** 高度优化的 2D Canvas 渲染引擎，以 60+ FPS 运行。
-- **响应式控制:** 随时随地畅玩。支持桌面端（WASD、方向键、鼠标跟随）和移动端（虚拟摇杆/触控）。
-- **战术性战斗:** 用头部咬击敌人，或者用你长长的尾巴缠绕它们来发动“鞭击”！
+### 🎮 动感十足的动作玩法
+- **极致流畅的引擎:** 高度优化的 2D Canvas 渲染引擎，在同屏包含数百个实体、粒子和弹幕的情况下依然保持 60+ FPS 运行。
+- **响应式控制:** 随时随地畅玩。支持桌面端（WASD、方向键、鼠标跟随）和移动端（虚拟摇杆、任意位置触控）。
+- **战术性战斗:** 用头部咬击敌人，或者用你长长的尾巴将它们紧紧缠绕以发动毁灭性的“鞭击”！
 
 ### 🐉 深入的 Roguelite 成长系统
-- **技能树:** 解锁强大的主动技能，如*旋风斩*、*神圣护盾* 和 *时间减缓*。
-- **天赋:** 消耗金币获得永久的被动属性提升，让每次开局都更加强大。
-- **遗物与神器:** 使用从宝库中找到的、能改变游戏机制的物品来自定义你的构筑 (Build)。
-- **巨蛇形态:** 改变外观并获得独特的元素增益（例如*黑曜石*、*虚空*、*炼狱*）。
+- **局内技能树:** 在单局游戏中解锁强大的主动技能，包括 *毒牙 (Fang Poison)*、*石肤 (Body Armor)*、*电火花 (Spark Magic)*、*时光位移 (Chrono Shift)*、*血之盛宴 (Blood Feast)*、*虚空磁场 (Void Magnet)*、*诸神黄昏 (Ragnarok)*，以及*终极风暴 (Serpent Tempest)*。
+- **永久天赋:** 消耗金币获得永久的被动属性提升（*最大生命值*、*移动速度*、*磁吸范围*、*灵魂倍率*），让每次开局都更加强大。
+- **遗物与神器:** 使用从宝库中找到的物品来自定义你的构筑 (Build)，如 *沙漏 (Hourglass)*、*灵魂瓮 (Soul Urn)*、*贪婪王冠 (Crown of Greed)*、*凤凰灰烬 (Phoenix Ash)* 和 *吸血鬼头骨 (Vampiric Skull)*。
+- **巨蛇形态 (皮肤):** 改变外观并获得独特的元素增益。可解锁的形态包括 *黑曜石君主 (Sovereign Obsidian)*、*翡翠蛇怪 (Jade Basilisk)*、*猩红恐惧 (Crimson Dread)*，以及 *暗影九头蛇 (Shadow Hydra)*。
 
 ### 👹 史诗级内容
-- **首领战:** 生存直到得分达到巅峰，面对拥有独特攻击模式（弹幕机制！）的强大守卫首领。
-- **多样的生物群落:** 探索各具特色的环境，从*深渊*、*闹鬼森林*，到*冰冻王国*和*火山遗迹*。
-- **成就与任务:** 完成每日任务和终身成就，赢取丰厚奖励。
+- **首领战:** 在不断升级的敌人波数中生存下来，直到得分达到巅峰，面对拥有独特弹幕攻击模式的强大守卫首领。
+- **多样的生物群落:** 探索各具特色的唯美环境：*深渊 (The Abyss)*、*闹鬼森林 (Haunted Forest)*、*冰冻王国 (Frozen Kingdom)* 以及 *火山遗迹 (Volcanic Ruins)*。
+- **成就与任务:** 完成每日任务和终身成就，赢取金币、灵魂和稀有水晶。解锁如 *灵魂收割者 (Soul Reaper)* 和 *异星半神 (Eldritch Demigod)* 这样的动态头衔。
 
 ### 🎓 沉浸式新手引导
-- **UI 导览:** 电影般的交互式界面导览，为你解释所有成长系统。
-- **实战教程:** 循序渐进的交互式实战，教你移动、战斗、使用技能和对抗首领。
+- **UI 导览:** 电影般的交互式界面导览，为新玩家解释所有营地成长系统。
+- **实战教程:** 循序渐进的交互式实战，教你移动、战斗、使用技能和对抗首领的诀窍。
 
 ---
 
@@ -77,9 +82,9 @@
 
 - **框架**: [React 18](https://react.dev/)
 - **构建工具**: [Vite](https://vitejs.dev/)
-- **样式**: [Tailwind CSS](https://tailwindcss.com/)
-- **游戏引擎**: 自定义 HTML5 `<canvas>` API 渲染
-- **状态管理**: React Hooks + Context / LocalStorage (用于持久化存档)
+- **样式**: [Tailwind CSS v3](https://tailwindcss.com/)
+- **游戏引擎**: 自定义 HTML5 `<canvas>` 渲染循环 (零外部游戏引擎依赖)
+- **状态管理**: React Hooks + Context + 游戏存档持久化 LocalStorage
 - **图标**: [Google Material Symbols](https://fonts.google.com/icons)
 - **部署**: 专为标准静态托管平台优化 (Vercel, Netlify, Cloud Run, GitHub Pages)
 
@@ -128,7 +133,7 @@ serpent-kingdom/
 ├── src/
 │   ├── components/      # React 组件 (UI 面板、模态框、游戏画布)
 │   │   ├── GameCanvas.tsx       # 核心游戏引擎与渲染循环
-│   │   ├── MainDashboard.tsx    # 局外成长与主界面
+│   │   ├── MainDashboard.tsx    # 局外成长与营地主界面
 │   │   ├── UITourOverlay.tsx    # 交互式新手导览
 │   │   └── ...
 │   ├── lib/             # 工具函数与管理器
@@ -137,8 +142,8 @@ serpent-kingdom/
 │   ├── App.tsx          # 应用程序主入口及状态路由
 │   ├── index.css        # Tailwind CSS 引入及全局样式
 │   ├── main.tsx         # React DOM 渲染入口
-│   └── types.ts         # TypeScript 接口及游戏数据定义
-├── public/              # 静态资源 (图片、音效文件)
+│   └── types.ts         # TypeScript 接口及游戏核心数据定义
+├── public/              # 静态资源 (图片、音效文件、网站图标)
 ├── package.json         # 依赖及脚本命令
 ├── vite.config.ts       # Vite 构建配置
 └── tailwind.config.js   # Tailwind 主题定义
@@ -148,14 +153,14 @@ serpent-kingdom/
 
 ## 🕹️ 怎么玩
 
-1. **移动**: 使用 `W`、`A`、`S`、`D`、`方向键` 或移动 `鼠标` 来控制方向。在移动设备上，请触摸并拖动以使用虚拟摇杆。
-2. **收集灵魂**: 吞噬发光的灵魂来延长你的尾巴，并赚取分数和金币。
+1. **移动**: 使用 `W`、`A`、`S`、`D`、`方向键` 或移动 `鼠标` 来控制方向。在移动设备上，请在屏幕任意位置触摸并拖动以使用虚拟摇杆。
+2. **收集灵魂**: 吞噬敌人掉落的发光灵魂来延长你的尾巴，并赚取分数和金币。
     - 🟢 *绿色*: 普通 (分数/金币)
     - 🟡 *金色*: 稀有 (大量金币)
     - 🔴 *红色*: 诅咒 (额外经验值 XP)
 3. **躲避攻击**: 躲避敌人的弹幕。你的头部非常脆弱，但你的身体可以承受攻击！
-4. **战斗**: 咬击普通敌人，或者用身体缠绕他们将其击败。这能让领域首领更快出现。
-5. **生存与飞升**: 使用你解锁的技能（冲刺、护盾、旋风斩），击败领域首领，并带着你的战利品凯旋！
+4. **战斗**: 咬击普通敌人，或者用身体缠绕他们将其粉碎。这能让领域首领更快出现。
+5. **生存与飞升**: 使用你解锁的技能，击败领域首领，并带着你的战利品凯旋，在营地中强化你的巨蛇！
 
 ---
 
@@ -181,9 +186,9 @@ serpent-kingdom/
 
 ## 🗺️ 开发路线图 (Roadmap)
 
-- [ ] **多人排行榜:** 接入真实的后端服务 (如 Firebase) 以支持全球高分榜。
+- [ ] **多人排行榜:** 接入后端服务 (如 Firebase) 以支持全球高分榜。
 - [ ] **手柄支持:** 添加 Gamepad API 支持，以允许使用主机手柄游玩。
-- [ ] **全新生物群落:** 添加 *天界* 和 *沉没之城*。
+- [ ] **全新生物群落:** 添加 *天界 (The Celestial Realm)* 和 *沉没之城 (The Sunken City)*。
 - [ ] **模组 (Mod) API:** 暴露 Hooks，让社区能够轻松添加自定义的巨蛇形态。
 
 ---
