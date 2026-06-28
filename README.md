@@ -15,13 +15,18 @@
 <div align="center">
   <p><strong>An epic, browser-based roguelite survival game built with React, Vite, and HTML5 Canvas.</strong></p>
   <p>
+    <strong>Play Online:</strong><br/>
+    <a href="https://game-snake-modern.vercel.app/">Vercel Deployment</a> |
+    <a href="https://the-serpent-kingdom-266474445798.asia-southeast1.run.app/">Cloud Run Deployment</a>
+  </p>
+  <p>
     <a href="README.md">English</a>
     ·
     <a href="README.zh-CN.md">简体中文</a>
     ·
-    <a href="#-getting-started">Quick Start</a>
+    <a href="#getting-started">Quick Start</a>
     ·
-    <a href="#-contributing">Contribute</a>
+    <a href="#contributing">Contribute</a>
   </p>
 </div>
 
@@ -31,13 +36,13 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 **The Serpent Kingdom** is a highly polished, action-packed roguelite game inspired by classic snake mechanics, elevated to modern survival-action standards. You play as the Ancient Abyssal Serpent. Navigate treacherous realms, consume glowing souls to grow your body, unlock eldritch abilities, and conquer Dimensional Bosses to reclaim your lost throne! 
 
 We've open-sourced this project to allow the community to build new biomes, enemies, and skills!
 
-## 📸 In-Game Screenshots
+## In-Game Screenshots
 
 <details open>
 <summary><b>Click to toggle screenshots</b></summary>
@@ -45,38 +50,38 @@ We've open-sourced this project to allow the community to build new biomes, enem
 
 | **Camp Dashboard (Progression UI)** | **Intense Boss Battles** | **Deep Skill Trees** |
 | :---: | :---: | :---: |
-| <img src="https://placehold.co/600x400/0f172a/4ade80?text=Camp+Dashboard%0A%0AStats,+Artifacts,+Skins" alt="Camp Dashboard" /> | <img src="https://placehold.co/600x400/0f172a/f87171?text=Boss+Encounters%0A%0ABullet+Hell+%26+Dodging" alt="Boss Encounters" /> | <img src="https://placehold.co/600x400/0f172a/3b82f6?text=Skill+Trees%0A%0AChrono+Shift,+Ragnarok" alt="Skill Trees" /> |
+| <img src="public/screenshots/Screenshot 2026-06-28 200429.png" width="300" alt="Camp Dashboard" /> | <img src="public/screenshots/Screenshot 2026-06-28 200725.png" width="300" alt="Boss Encounters" /> | <img src="public/screenshots/Screenshot 2026-06-28 200515.png" width="300" alt="Skill Trees" /> |
 
 *(Note: Screenshots are representative of the in-game UI. Run the project locally to see the stunning 60FPS particle effects and animations!)*
 </details>
 
 ---
 
-## ✨ Features & Game Systems
+## Features & Game Systems
 
-### 🎮 Dynamic Action Gameplay
+### Dynamic Action Gameplay
 - **Silky Smooth Engine:** A heavily optimized 2D canvas-based engine running at 60+ FPS with hundreds of active entities, particles, and projectiles.
 - **Responsive Controls:** Play anywhere. Supports desktop (WASD, Arrow Keys, Mouse-follow) and mobile (Virtual Joystick and Touch controls).
 - **Tactical Combat:** Bite enemies with your head or perform a "Whip" attack by curling your long tail around them!
 
-### 🐉 Deep Roguelite Progression
+### Deep Roguelite Progression
 - **Skill Tree:** Unlock powerful active abilities during your run, including *Fang Poison*, *Body Armor*, *Spark Magic*, *Chrono Shift*, *Blood Feast*, *Void Magnet*, *Ragnarok*, and *Serpent Tempest*.
 - **Talents:** Invest your gold into permanent passive upgrades (*Max Health*, *Speed*, *Magnet Range*, *Soul Multiplier*) to start stronger each run.
 - **Relics & Artifacts:** Customize your build with gameplay-altering items found in the Vault, such as the *Hourglass*, *Soul Urn*, *Crown of Greed*, *Phoenix Ash*, and the *Vampiric Skull*.
 - **Serpent Skins (Forms):** Change your visual appearance and gain unique elemental boosts. Unlock forms like *Sovereign Obsidian*, *Jade Basilisk*, *Crimson Dread*, and *Shadow Hydra*.
 
-### 👹 Epic Content
+### Epic Content
 - **Boss Fights:** Survive the escalating waves and face off against formidable Boss Guardians with unique bullet-hell attack patterns.
 - **Multiple Biomes:** Explore distinct environments with unique aesthetics: *The Abyss*, *Haunted Forest*, *Frozen Kingdom*, and *Volcanic Ruins*.
 - **Achievements & Quests:** Complete daily missions and lifetime achievements to earn Gold, Souls, and rare Crystals. Features dynamic titles like *Soul Reaper* and *Eldritch Demigod*.
 
-### 🎓 Immersive Onboarding
+### Immersive Onboarding
 - **Cinematic UI Tour:** A cinematic, interactive interface tour explaining all progression systems to new players.
 - **Gameplay Tutorial:** A step-by-step interactive match that teaches movement, combat, using abilities, and Boss encounters.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 This project leverages modern Web technologies to deliver a high-performance gaming experience in the browser:
 
@@ -90,7 +95,7 @@ This project leverages modern Web technologies to deliver a high-performance gam
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -126,7 +131,7 @@ The compiled static files will be located in the `dist` directory, ready to be s
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 serpent-kingdom/
@@ -151,22 +156,49 @@ serpent-kingdom/
 
 ---
 
-## 🕹️ How to Play
+## How to Play
 
 1. **Movement**: Use `W`, `A`, `S`, `D`, `Arrow Keys`, or move your `Mouse` to steer. On mobile, touch and drag anywhere to use the virtual joystick.
 2. **Collect Souls**: Devour glowing souls dropped by enemies to grow your tail and earn score/gold.
-    - 🟢 *Green*: Common (Score/Gold)
-    - 🟡 *Gold*: Rare (High Gold)
-    - 🔴 *Red*: Cursed (Bonus XP)
+    - Green: Common (Score/Gold)
+    - Gold: Rare (High Gold)
+    - Red: Cursed (Bonus XP)
 3. **Avoid Attacks**: Dodge enemy projectiles. Your head is vulnerable, but your body can withstand hits!
 4. **Combat**: Defeat normal enemies by biting them or wrapping your body around them to crush them. This summons the Realm Boss sooner.
 5. **Survive & Ascend**: Use your unlocked abilities, defeat the Realm Boss, and extract with your loot to upgrade your Serpent at the Camp!
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from the open-source community! Whether you are fixing a bug, adding a new Biome, creating a new Boss, or improving the documentation, your help is appreciated.
+
+We have officially submitted our repository to major open source contribution platforms including **[up-for-grabs.net](https://up-for-grabs.net)**, **[goodfirstissue.dev](https://goodfirstissue.dev/)**, **[codetriage.com](https://codetriage.com)**, and **[firsttimersonly.com](https://firsttimersonly.com)**!
+
+### 40+ Issues Waiting For You!
+
+Currently, there are **40+ issues** across 9 distinct categories ready for contributors:
+
+| Category | Count | Difficulty |
+| --- | --- | --- |
+| Documentation | 5 | All beginner |
+| Bug fixes | 5 | Beginner–Intermediate |
+| UI/UX | 4 | Beginner |
+| Gameplay features | 8 | Intermediate–Advanced |
+| Audio | 3 | Intermediate |
+| Performance/Refactor | 5 | Intermediate–Advanced |
+| Advanced new features | 8 | Advanced |
+| Accessibility & Mobile | 4 | Beginner–Intermediate |
+| Testing | 3 | Beginner–Intermediate |
+| Security | 2 | Intermediate |
+
+### Our Labeling System
+
+We use a comprehensive set of **27 labels across 4 groups** to help you find the perfect issue:
+- **Difficulty**: `good first issue`, `beginner-friendly`, `intermediate`, `advanced`
+- **Type**: `bug`, `enhancement`, `documentation`, `performance`, `refactor`, `UI/UX`, `testing`, `security`, `accessibility`
+- **Domain**: `gameplay`, `audio`, `visual-effects`, `boss-fight`, `enemy-AI`, `progression`, `mobile`, `biome`, `save-system`, `multiplayer`
+- **Status**: `help wanted`, `up-for-grabs`, `hacktoberfest`
 
 ### How to Contribute
 
@@ -178,13 +210,15 @@ We welcome contributions from the open-source community! Whether you are fixing 
 6. **Push to the branch** (`git push origin feature/amazing-new-boss`).
 7. **Open a Pull Request** against the `main` branch of this repository.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more detailed guidelines.
+
 ### Development Guidelines
 - Please adhere to the existing code style (React functional components, Tailwind for styling).
 - When adding new game entities (Enemies, Powerups), update `src/types.ts` and ensure the rendering logic in `GameCanvas.tsx` handles them efficiently.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] **Multiplayer Leaderboards:** Integrate a backend (e.g., Firebase) for global high scores.
 - [ ] **Controller Support:** Add Gamepad API support for console controllers.
@@ -193,13 +227,13 @@ We welcome contributions from the open-source community! Whether you are fixing 
 
 ---
 
-## 📄 License
+## License
 
 This project is open-source and licensed under the [MIT License](LICENSE) - see the LICENSE file for details. You are free to use, modify, and distribute this software.
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - Inspired by classic snake and modern roguelite survival games.
 - Icons provided by [Google Material Symbols](https://fonts.google.com/icons).
