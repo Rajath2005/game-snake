@@ -159,7 +159,8 @@ export default function GameCanvas({
   const tutorialStepRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isTutorialMode) {
+    const hasCompleted = localStorage.getItem("serpent_gameplay_tutorial_completed");
+    if (isTutorialMode || !hasCompleted) {
       setTutorialStep("MOVEMENT");
       tutorialStepRef.current = "MOVEMENT";
     }

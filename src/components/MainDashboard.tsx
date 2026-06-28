@@ -47,6 +47,8 @@ interface MainDashboardProps {
   onPrestigeReset: () => void;
   onSelectDifficulty: (level: "EASY" | "NORMAL" | "HARD" | "NIGHTMARE") => void;
   onAlert: (msg: string, title?: string) => void;
+  onReplayTour: () => void;
+  onReplayGameplayTutorial: () => void;
   activeTab?: TabType;
   onChangeTab?: (tab: TabType) => void;
   onSaveStateUpdate?: (newState: GameSaveState) => void;
@@ -1605,9 +1607,33 @@ export default function MainDashboard({
               <span className="material-symbols-outlined text-3xl">help_center</span>
               How To Play
             </h2>
-            <p className="text-on-surface-variant font-body mb-10">
-              The ancient codex of the Serpent Kingdom. Read this carefully to survive the dangerous biomes and reclaim your throne.
-            </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+              <p className="text-on-surface-variant font-body">
+                The ancient codex of the Serpent Kingdom. Read this carefully to survive the dangerous biomes and reclaim your throne.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    AudioManager.playButton();
+                    onReplayTour();
+                  }}
+                  className="stone-button px-4 py-2 rounded-lg text-sm text-primary uppercase font-bold tracking-wider hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">explore</span>
+                  Interface Tour
+                </button>
+                <button
+                  onClick={() => {
+                    AudioManager.playButton();
+                    onReplayGameplayTutorial();
+                  }}
+                  className="stone-button px-4 py-2 rounded-lg text-sm text-secondary uppercase font-bold tracking-wider hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">sports_esports</span>
+                  Gameplay Tutorial
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               

@@ -27,7 +27,7 @@ import GameCanvas from "./components/GameCanvas";
 import GameOver from "./components/GameOver";
 import AchievementUnlock from "./components/AchievementUnlock";
 import SettingsScreen from "./components/SettingsScreen";
-import OnboardingOverlay from "./components/OnboardingOverlay";
+import UITourOverlay from "./components/UITourOverlay";
 import WelcomeChestModal from "./components/WelcomeChestModal";
 
 type ScreenState = "LOADING" | "CAMP" | "GAMEPLAY";
@@ -238,17 +238,22 @@ export default function App() {
   const handleOnboardingComplete = () => {
     setOnboardingActive(false);
     localStorage.setItem("serpent_onboarding_completed", "true");
-    setWelcomeChestActive(true);
+    if (!localStorage.getItem("serpent_welcome_chest_claimed")) {
+      setWelcomeChestActive(true);
+    }
   };
 
   const handleOnboardingSkip = () => {
     setOnboardingActive(false);
     localStorage.setItem("serpent_onboarding_completed", "true");
-    setWelcomeChestActive(true);
+    if (!localStorage.getItem("serpent_welcome_chest_claimed")) {
+      setWelcomeChestActive(true);
+    }
   };
 
   const handleClaimWelcomeChest = (rewards: { gold: number; souls: number; crystals: number; achievementId: string }) => {
     setWelcomeChestActive(false);
+    localStorage.setItem("serpent_welcome_chest_claimed", "true");
     const updated = {
       ...saveState,
       gold: saveState.gold + rewards.gold,
@@ -952,6 +957,11 @@ export default function App() {
           onStartGame={handleStartGame}
           onOpenSettings={() => setShowSettings(true)}
           onAlert={showCustomAlert}
+          onReplayTour={() => setOnboardingActive(true)}
+          onReplayGameplayTutorial={() => {
+            setIsTutorialMode(true);
+            handleStartGame();
+          }}
           activeTab={dashboardActiveTab}
           onChangeTab={setDashboardActiveTab}
           
@@ -1160,20 +1170,8 @@ export default function App() {
 
       {/* 8. ONBOARDING OVERLAY */}
       {onboardingActive && (
-        <OnboardingOverlay
-          onStartAdventure={() => {
-            handleOnboardingComplete();
-            setIsTutorialMode(false);
-            handleStartGame();
-          }}
-          onWatchGameplay={() => {
-            handleOnboardingComplete();
-            setIsDemoMode(true);
-            handleStartGame();
-          }}
-          onHowToPlay={() => {
-            handleOnboardingComplete();
-          }}
+        <UITourOverlay
+          onComplete={handleOnboardingComplete}
           onSkip={handleOnboardingSkip}
         />
       )}
