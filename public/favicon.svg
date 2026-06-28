@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="serpent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="#0f172a" rx="120" />
+  
+  <path 
+    d="M 256,100 
+       C 150,100 100,160 100,220 
+       C 100,300 350,220 350,300 
+       C 350,380 150,350 200,420 
+       C 250,490 400,350 400,280 
+       C 400,150 300,100 256,100 Z" 
+    fill="none" 
+    stroke="url(#serpent-grad)" 
+    stroke-width="40" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+    filter="url(#glow)"
+  />
+  <circle cx="210" cy="170" r="12" fill="#fbbf24" filter="url(#glow)"/>
+</svg>
