@@ -194,7 +194,8 @@ export default function GameCanvas({
   const tutorialStepRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const hasCompleted = localStorage.getItem("serpent_gameplay_tutorial_completed");
+    let hasCompleted: string | null = null;
+    try { hasCompleted = localStorage.getItem("serpent_gameplay_tutorial_completed"); } catch {};
     if (isTutorialMode || !hasCompleted) {
       setTutorialStep("MOVEMENT");
       tutorialStepRef.current = "MOVEMENT";
@@ -3702,6 +3703,7 @@ export default function GameCanvas({
 
   // Touch and drag support for mobile controls
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
     const s = stateRef.current;
     if (e.touches[0]) {
       const rect = canvasRef.current?.getBoundingClientRect();
@@ -3715,6 +3717,7 @@ export default function GameCanvas({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
     const s = stateRef.current;
     if (e.touches[0]) {
       const rect = canvasRef.current?.getBoundingClientRect();
@@ -3726,7 +3729,8 @@ export default function GameCanvas({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
     const s = stateRef.current;
     s.isTouchActive = false;
     s.touchStart = { x: 0, y: 0 };
@@ -3820,6 +3824,8 @@ export default function GameCanvas({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="block bg-surface"
+        role="img"
+        aria-label="Serpent Kingdom game arena"
       />
 
       {/* GAMEPLAY TUTORIAL HUD OVERLAY */}
@@ -3877,7 +3883,7 @@ export default function GameCanvas({
       )}
 
       {!isDemoMode && (
-        <div className="portrait-warning absolute inset-0 bg-background/95 z-[100] flex-col items-center justify-center p-6 text-center backdrop-blur-md hidden landscape:hidden portrait:flex">
+        <div className="portrait-warning absolute inset-0 bg-background/95 z-[100] flex-col items-center justify-center p-6 text-center backdrop-blur-md portrait:flex landscape:hidden">
           <span className="material-symbols-outlined text-primary text-6xl mb-4 animate-pulse">screen_rotation</span>
           <h2 className="font-headline text-2xl text-primary font-bold uppercase tracking-widest mb-2">Rotate Device</h2>
           <p className="text-on-surface-variant font-body text-sm mb-6 max-w-sm leading-relaxed">

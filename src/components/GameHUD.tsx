@@ -16,6 +16,8 @@ interface GameHUDProps {
   cycloneCooldown: number;
   onPauseToggle: () => void;
   onActivateAbility: (ability: "dash" | "slow" | "shield" | "cyclone") => void;
+  onToggleFullscreen: () => void;
+  isFullscreen: boolean;
 }
 
 export default function GameHUD({
@@ -33,7 +35,9 @@ export default function GameHUD({
   shieldCooldown,
   cycloneCooldown,
   onPauseToggle,
-  onActivateAbility
+  onActivateAbility,
+  onToggleFullscreen,
+  isFullscreen
 }: GameHUDProps) {
   const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" ? !navigator.onLine : false);
   const [liveScore, setLiveScore] = useState(score);
@@ -77,7 +81,6 @@ export default function GameHUD({
         className="absolute top-0 left-0 w-full flex justify-between items-center px-3 md:px-margin-edge bg-surface-dim/60 backdrop-blur-xl border-b border-outline-variant/30 shadow-md pointer-events-auto transition-all"
         style={{
           height: "calc(3.5rem + env(safe-area-inset-top, 0px))",
-          paddingTop: "env(safe-area-inset-top, 0px)",
           paddingLeft: "calc(0.75rem + env(safe-area-inset-left, 0px))",
           paddingRight: "calc(0.75rem + env(safe-area-inset-right, 0px))"
         }}
@@ -125,20 +128,33 @@ export default function GameHUD({
           )}
         </div>
 
-        {/* Trailing: Pause Button */}
-        <button
-          onClick={onPauseToggle}
-          className="font-headline-md text-headline-md text-primary drop-shadow-[0_0_10px_rgba(233,193,118,0.5)] hover:text-secondary hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer pointer-events-auto font-bold text-sm md:text-base"
-        >
-          <span className="material-symbols-outlined text-lg md:text-2xl">pause_circle</span>
-          <span className="hidden sm:inline tracking-widest text-xs md:text-sm">PAUSE</span>
-        </button>
+        {/* Trailing: Fullscreen + Pause Buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleFullscreen}
+            className="font-headline-md text-on-surface-variant hover:text-secondary hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer pointer-events-auto"
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            <span className="material-symbols-outlined text-lg md:text-2xl">
+              {isFullscreen ? "fullscreen_exit" : "fullscreen"}
+            </span>
+          </button>
+          <button
+            onClick={onPauseToggle}
+            className="font-headline-md text-headline-md text-primary drop-shadow-[0_0_10px_rgba(233,193,118,0.5)] hover:text-secondary hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer pointer-events-auto font-bold text-sm md:text-base"
+            aria-label="Pause game"
+          >
+            <span className="material-symbols-outlined text-lg md:text-2xl">pause_circle</span>
+            <span className="hidden sm:inline tracking-widest text-xs md:text-sm">PAUSE</span>
+          </button>
+        </div>
       </header>
 
       {/* Boss Health Bar */}
       {bossActive && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-3/4 max-w-2xl z-40 flex flex-col items-center gap-1 animate-pulse">
-          <span className="font-headline-md text-headline-md text-error text-shadow-[0_0_10px_rgba(255,180,171,0.5)] font-bold tracking-widest uppercase">
+          <span className="font-headline-md text-headline-md text-error text-glow-primary font-bold tracking-widest uppercase">
             THE SERPENT KING
           </span>
           <div className="w-full h-5 bg-surface-container-lowest border-2 border-outline-variant relative overflow-hidden rounded-sm">
@@ -224,6 +240,7 @@ export default function GameHUD({
               dashCooldown > 0 ? "border-outline-variant opacity-50" : "border-outline-variant/50"
             }`}
             title="Sovereign Dash (Hotkey: Space/W)"
+            aria-label="Sovereign Dash"
           >
             <span className="material-symbols-outlined text-on-surface group-hover:text-secondary text-xl sm:text-2xl">
               bolt
@@ -245,6 +262,7 @@ export default function GameHUD({
               slowCooldown > 0 ? "border-outline-variant opacity-50" : "border-primary"
             }`}
             title="Chrono Shift (Hotkey: Shift/S)"
+            aria-label="Chrono Shift"
           >
             {slowCooldown === 0 && (
               <div className="absolute inset-0 rounded-full border border-secondary animate-ping opacity-30 animate-duration-1000" />
@@ -269,6 +287,7 @@ export default function GameHUD({
               shieldCooldown > 0 ? "border-outline-variant opacity-50" : "border-outline-variant/50"
             }`}
             title="Aegis Shield (Hotkey: E)"
+            aria-label="Aegis Shield"
           >
             <span className="material-symbols-outlined text-on-surface group-hover:text-secondary text-xl sm:text-2xl">
               shield
@@ -290,6 +309,7 @@ export default function GameHUD({
               cycloneCooldown > 0 ? "border-outline-variant opacity-50" : "border-outline-variant/50"
             }`}
             title="Serpent Cyclone (Hotkey: Q)"
+            aria-label="Serpent Cyclone"
           >
             <span className="material-symbols-outlined text-on-surface group-hover:text-secondary text-xl sm:text-2xl">
               cyclone

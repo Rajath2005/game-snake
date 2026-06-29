@@ -14,7 +14,8 @@ import {
   ALL_ARTIFACTS,
   ALL_FORMS,
   SKILL_NODES,
-  DAILY_REWARDS
+  DAILY_REWARDS,
+  DEFAULT_ACHIEVEMENTS
 } from "./types";
 
 import { AudioManager } from "./lib/audio";
@@ -105,9 +106,28 @@ export default function App() {
   // Hot-trigger to send button-clicks from HUD to the canvas engine
   const [activeAbilityTrigger, setActiveAbilityTrigger] = useState("");
 
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (typeof document.documentElement.requestFullscreen !== "function") return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
   // Load save state from LocalStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("serpent_kingdom_save_v1");
+    let saved: string | null = null;
+    try { saved = localStorage.getItem("serpent_kingdom_save_v1"); } catch {}
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -420,7 +440,20 @@ export default function App() {
   };
 
   const handleClaimAchievement = (id: string) => {
-    // Standard claimed trigger
+    const achievement = DEFAULT_ACHIEVEMENTS.find(a => a.id === id);
+    if (!achievement || achievement.completed) return;
+
+    const updatedAchievements = saveState.completedAchievements.includes(id)
+      ? saveState.completedAchievements
+      : [...saveState.completedAchievements, id];
+
+    const updated = {
+      ...saveState,
+      completedAchievements: updatedAchievements,
+      gold: saveState.gold + (achievement.rewards.gold || 0),
+      crystals: saveState.crystals + (achievement.rewards.crystals || 0),
+    };
+    saveToLocalStorage(updated);
   };
 
   // ==========================================
@@ -947,6 +980,11 @@ export default function App() {
   // Find active Skin specs
   const activeSkinObj = ALL_SKINS.find(s => s.id === saveState.equippedSkin) || ALL_SKINS[0];
 
+  const nextQuest = saveState.quests.find(q => !q.completed && q.current < q.target);
+  const activeObjective = bossActive
+    ? "DEFEAT THE BOSS GUARDIAN"
+    : nextQuest ? `${nextQuest.title} (${nextQuest.current}/${nextQuest.target})` : "Survive and grow stronger!";
+
   return (
     <div className="h-[100dvh] w-screen overflow-hidden bg-[#131313] relative select-none font-body-md text-on-surface">
       
@@ -1060,13 +1098,7 @@ export default function App() {
               highScore={saveState.highScore}
               souls={saveState.souls}
               soulProgress={(saveState.souls / 15) * 100} // dynamic tier loop
-              activeObjective={
-                bossActive 
-                  ? "DEFEAT THE BOSS GUARDIAN" 
-                  : (saveState.quests.find(q => !q.isCompleted && q.current < q.target)
-                      ? `${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.title} (${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.current}/${saveState.quests.find(q => !q.isCompleted && q.current < q.target)!.target})`
-                      : "Survive and grow stronger!")
-              }
+              activeObjective={activeObjective}
               combo={3} // default starting base or dynamic from canvas
               hasCrystal={saveState.crystals >= 10}
               bossActive={bossActive}
@@ -1077,6 +1109,8 @@ export default function App() {
               cycloneCooldown={abilitiesCooldowns.cyclone}
               onPauseToggle={() => setIsPaused(!isPaused)}
               onActivateAbility={(ability) => setActiveAbilityTrigger(ability)}
+              onToggleFullscreen={handleToggleFullscreen}
+              isFullscreen={isFullscreen}
             />
           )}
 

@@ -15,55 +15,49 @@ const TOUR_STEPS = [
   },
   {
     title: "The Objective",
-    description: "Your goal is to devour souls, grow your serpent body, defeat dimensional bosses, and amass immense power to rule once more.",
+    description: "Devour souls, grow your serpent body, defeat dimensional bosses, and amass immense power to rule once more.",
     targetId: null,
     position: "center",
   },
   {
-    title: "Play Button",
-    description: "When you're ready, click here to select a biome portal and begin your run. Surrive, grow, and conquer!",
-    targetId: ["onboarding-play-btn"],
-    position: "top",
+    title: "Enter the Portal",
+    description: "Tap this button anytime to start your run. Survive, grow, and conquer the realms!",
+    targetId: ["floating-play-btn", "onboarding-hero-play-btn", "onboarding-play-btn"],
+    position: "left",
   },
   {
     title: "Player Profile",
-    description: "Here you can view your current Level, Rank, and total currencies (Gold, Souls, Void Crystals, Skill Points).",
+    description: "View your Level, Rank, and currencies (Gold, Souls, Void Crystals, Skill Points).",
     targetId: ["onboarding-player-profile"],
     position: "bottom",
   },
   {
     title: "The Vault (Shop)",
-    description: "Spend your hard-earned currencies here to acquire new cosmetics, starter advantages, and permanent stat boosts.",
+    description: "Spend currencies on cosmetics, boosts, and permanent stat upgrades.",
     targetId: ["onboarding-tab-shop", "onboarding-tab-mobile-shop"],
     position: "bottom",
   },
   {
     title: "Inventory & Loadout",
-    description: "Equip Relics, learn new Talents, unlock Skill Tree nodes, and change your Serpent Form in these tabs.",
+    description: "Equip Relics, learn Talents, unlock Skills, and change your Serpent Form.",
     targetId: ["onboarding-tab-relics", "onboarding-tab-mobile-relics"],
     position: "bottom",
   },
   {
     title: "Missions & Quests",
-    description: "Complete daily missions and lifetime achievements to earn massive rewards and exclusive artifacts.",
+    description: "Complete missions and achievements to earn massive rewards and exclusive items.",
     targetId: ["onboarding-tab-quests", "onboarding-tab-mobile-quests"],
     position: "bottom",
   },
   {
-    title: "Leaderboards",
-    description: "Compete against other ancient serpents across the realms. Prove your dominance on the global high scores!",
-    targetId: ["onboarding-leaderboard-btn"],
-    position: "bottom-left",
-  },
-  {
     title: "Settings",
-    description: "Tweak your visual graphics, audio volume, and game preferences here to ensure an optimal experience.",
+    description: "Tweak graphics, audio, and game preferences for an optimal experience.",
     targetId: ["onboarding-settings-btn"],
-    position: "bottom-left",
+    position: "left",
   },
   {
     title: "Start First Adventure",
-    description: "Your guided tour is complete! Are you ready to reclaim what is yours? Start your adventure now!",
+    description: "Your guided tour is complete! Are you ready to reclaim what is yours? Tap the play button to begin!",
     targetId: null,
     position: "center",
   }
@@ -73,6 +67,7 @@ export default function UITourOverlay({ onComplete, onSkip }: UITourOverlayProps
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const resizeTimeout = useRef<NodeJS.Timeout>();
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const step = TOUR_STEPS[currentStep];
 
@@ -85,27 +80,25 @@ export default function UITourOverlay({ onComplete, onSkip }: UITourOverlayProps
     let el: HTMLElement | null = null;
     for (const id of step.targetId) {
       el = document.getElementById(id);
-      if (el && el.offsetParent !== null) { // Ensure it's visible
+      if (el && el.offsetParent !== null) {
         break;
       }
     }
 
     if (el) {
-      // Add scroll into view smoothly if element is out of bounds
       const rect = el.getBoundingClientRect();
       const isVisible = (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        rect.top >= -50 &&
+        rect.left >= -50 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) + 50 &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth) + 50
       );
 
       if (!isVisible) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Recalculate after scroll
         setTimeout(() => {
           setTargetRect(el!.getBoundingClientRect());
-        }, 300);
+        }, 350);
       } else {
         setTargetRect(rect);
       }
@@ -148,6 +141,52 @@ export default function UITourOverlay({ onComplete, onSkip }: UITourOverlayProps
     }
   };
 
+  const computeTooltipStyle = (): React.CSSProperties => {
+    if (!targetRect) {
+      return {
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+      };
+    }
+
+    const gap = 12;
+    const tooltipW = Math.min(320, window.innerWidth - 32);
+    let top: number;
+    let left: number;
+    let transform = '';
+
+    switch (step.position) {
+      case 'top':
+        top = targetRect.top - gap;
+        left = targetRect.left + targetRect.width / 2;
+        transform = 'translate(-50%, -100%)';
+        break;
+      case 'bottom':
+        top = targetRect.bottom + gap;
+        left = targetRect.left + targetRect.width / 2;
+        transform = 'translate(-50%, 0)';
+        break;
+      case 'left':
+        top = targetRect.top + targetRect.height / 2;
+        left = targetRect.left - gap;
+        transform = 'translate(-100%, -50%)';
+        break;
+      default:
+        top = targetRect.top + targetRect.height / 2;
+        left = targetRect.right + gap;
+        transform = 'translate(0, -50%)';
+    }
+
+    // Clamp to viewport bounds
+    const pad = 8;
+    const estimatedH = 280;
+    top = Math.max(pad, Math.min(top, window.innerHeight - estimatedH));
+    left = Math.max(pad, Math.min(left, window.innerWidth - tooltipW - pad));
+
+    return { top, left, transform };
+  };
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none">
       {/* Dimmed Background Overlay with cutout */}
@@ -184,21 +223,11 @@ export default function UITourOverlay({ onComplete, onSkip }: UITourOverlayProps
 
       {/* Tooltip Card */}
       <div 
-        className={`absolute pointer-events-auto transition-all duration-500 ease-in-out ${
-          targetRect ? 'transform-gpu' : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-        }`}
-        style={targetRect ? {
-          top: step.position.includes('top') ? targetRect.top - 20 : (step.position.includes('bottom') ? targetRect.bottom + 20 : targetRect.top),
-          left: step.position.includes('left') ? targetRect.left - 300 : (step.position.includes('right') ? targetRect.right + 20 : targetRect.left + (targetRect.width / 2)),
-          transform: targetRect ? (
-            step.position === 'top' ? 'translate(-50%, -100%)' :
-            step.position === 'bottom' ? 'translate(-50%, 0)' :
-            step.position === 'bottom-left' ? 'translate(-100%, 0)' :
-            'translate(0, 0)'
-          ) : undefined
-        } : {}}
+        ref={tooltipRef}
+        className="absolute pointer-events-auto transition-all duration-500 ease-in-out transform-gpu"
+        style={computeTooltipStyle()}
       >
-        <div className="w-[320px] bg-surface p-5 rounded-2xl border border-primary/30 shadow-2xl shadow-primary/20 flex flex-col gap-3">
+        <div className="w-[90vw] max-w-[320px] bg-surface p-4 md:p-5 rounded-2xl border border-primary/30 shadow-2xl shadow-primary/20 flex flex-col gap-3">
           
           <div className="flex justify-between items-center">
             <span className="font-label-numeric text-[10px] text-primary font-bold tracking-widest uppercase">
@@ -215,15 +244,15 @@ export default function UITourOverlay({ onComplete, onSkip }: UITourOverlayProps
             </button>
           </div>
 
-          <h3 className="font-headline text-lg text-primary uppercase tracking-wider font-bold">
+          <h3 className="font-headline text-base md:text-lg text-primary uppercase tracking-wider font-bold">
             {step.title}
           </h3>
           
-          <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+          <p className="font-body text-xs md:text-sm text-on-surface-variant leading-relaxed">
             {step.description}
           </p>
 
-          <div className="flex justify-between items-center mt-3 pt-3 border-t border-outline-variant/20">
+          <div className="flex justify-between items-center mt-2 pt-3 border-t border-outline-variant/20">
             <button
               onClick={handlePrev}
               className={`text-xs font-bold uppercase tracking-wider transition-colors ${

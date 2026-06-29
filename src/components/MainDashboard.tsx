@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AudioManager } from "../lib/audio";
 import {
   GameSaveState,
@@ -100,6 +100,27 @@ export default function MainDashboard({
   const [isHatching, setIsHatching] = useState(false);
   const [hatchedDragon, setHatchedDragon] = useState<string | null>(null);
   const [profileModalTab, setProfileModalTab] = useState<"PROFILE" | "TITLES" | "FRAMES" | "DRAGONS">("PROFILE");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const hatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (hatchTimerRef.current) clearTimeout(hatchTimerRef.current); };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (typeof document.documentElement.requestFullscreen !== "function") return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
 
   const activeTitleObj = ALL_TITLES.find(t => t.id === saveState.selectedTitle) || ALL_TITLES[0];
   const activeFrameObj = ALL_FRAMES.find(f => f.id === saveState.selectedFrame) || ALL_FRAMES[0];
@@ -110,7 +131,8 @@ export default function MainDashboard({
     setIsHatching(true);
     setHatchedDragon(null);
 
-    setTimeout(() => {
+    if (hatchTimerRef.current) clearTimeout(hatchTimerRef.current);
+    hatchTimerRef.current = setTimeout(() => {
       const index = Math.floor(Math.random() * HATCHABLE_DRAGONS.length);
       const chosen = HATCHABLE_DRAGONS[index];
 
@@ -309,9 +331,19 @@ export default function MainDashboard({
         {/* Right Action buttons */}
         <div className="flex items-center gap-2">
           <button
+            onClick={toggleFullscreen}
+            className="font-label-numeric text-label-numeric text-on-surface-variant border border-outline-variant/50 px-3 py-1.5 rounded hover:text-secondary hover:border-secondary/50 hover:scale-105 transition-all active:scale-95 duration-75 cursor-pointer tracking-wider text-[10px] sm:text-xs flex items-center gap-1"
+            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Enter Fullscreen (F)"}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            <span className="material-symbols-outlined text-xs">{isFullscreen ? "fullscreen_exit" : "fullscreen"}</span>
+            <span className="hidden sm:inline">{isFullscreen ? "EXIT" : "FULLSCREEN"}</span>
+          </button>
+          <button
             id="onboarding-leaderboard-btn"
             onClick={() => onAlert("Retrieving Royal Leaderboards from local vault...", "VAULT ACCESS")}
             className="font-label-numeric text-label-numeric text-[#e9c176] border border-[#e9c176]/50 px-3 py-1.5 rounded hover:bg-[#e9c176]/10 hover:text-secondary hover:scale-105 transition-all active:scale-95 duration-75 cursor-pointer font-bold tracking-wider text-[10px] sm:text-xs flex items-center gap-1"
+            aria-label="View Leaderboard"
           >
             <span className="material-symbols-outlined text-xs">leaderboard</span>
             LEADERBOARD
@@ -320,6 +352,7 @@ export default function MainDashboard({
             id="onboarding-settings-btn"
             onClick={onOpenSettings}
             className="font-label-numeric text-label-numeric text-primary border border-primary px-3 py-1.5 rounded hover:bg-primary/10 hover:text-secondary hover:scale-105 transition-all active:scale-95 duration-75 cursor-pointer font-bold tracking-wider text-[10px] sm:text-xs flex items-center gap-1"
+            aria-label="Open Settings"
           >
             <span className="material-symbols-outlined text-xs">settings</span>
             SETTINGS
@@ -327,8 +360,21 @@ export default function MainDashboard({
         </div>
       </header>
 
+      {/* Floating PLAY button — always visible */}
+      <button
+        id="floating-play-btn"
+        onClick={onStartGame}
+        className="fixed bottom-6 right-6 z-50 stone-button w-16 h-16 md:w-20 md:h-20 rounded-full font-headline-md text-2xl md:text-3xl text-primary flex items-center justify-center cursor-pointer select-none font-bold shadow-[0_0_30px_rgba(233,193,118,0.5)] hover:shadow-[0_0_50px_rgba(78,222,163,0.8)] hover:text-secondary active:scale-90 transition-all animate-pulse"
+        title="Enter Portal"
+        aria-label="Play Game"
+      >
+        <span className="material-symbols-outlined text-3xl md:text-4xl font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
+          play_arrow
+        </span>
+      </button>
+
       {/* Main Camp View Canvas */}
-      <main className="flex-grow z-10 px-gutter md:px-[5%] lg:px-[10%] py-6 relative">
+      <main className="flex-grow z-10 px-gutter md:px-[5%] lg:px-[10%] py-6 relative pb-24 md:pb-6">
 
         {/* HERO SECTION FOR FIRST-TIME VISITORS */}
         {isFirstVisit && (
@@ -407,30 +453,30 @@ export default function MainDashboard({
           <div>
 
             {/* Navigation Tabs (Mobile Only Layout) */}
-            <div className="flex lg:hidden justify-start gap-3 overflow-x-auto pb-2 border-b border-outline-variant/30 mb-6 hide-scrollbar">
+            <div className="flex lg:hidden justify-start gap-2 overflow-x-auto pb-2 border-b border-outline-variant/30 mb-4 hide-scrollbar">
               {([
-                { id: "BIOMES", label: "Portals", icon: "map" },
-                { id: "SHOP", label: "Vault", icon: "storefront" },
-                { id: "TALENTS", label: "Talents", icon: "upgrade" },
-                { id: "SKILLS", label: "Skill Tree", icon: "account_tree" },
-                { id: "RELICS", label: "Relics", icon: "brightness_7" },
-                { id: "FORMS", label: "Forms", icon: "pest_control" },
-                { id: "CALENDAR", label: "Daily", icon: "calendar_month" },
-                { id: "PRESTIGE", label: "Prestige", icon: "military_tech" },
-                { id: "QUESTS", label: "Missions", icon: "checklist" },
-                { id: "HELP", label: "Help", icon: "help" }
-              ] as { id: TabType; label: string; icon: string }[]).map((tab) => (
+                { id: "BIOMES", icon: "map" },
+                { id: "SHOP", icon: "storefront" },
+                { id: "TALENTS", icon: "upgrade" },
+                { id: "SKILLS", icon: "account_tree" },
+                { id: "RELICS", icon: "brightness_7" },
+                { id: "FORMS", icon: "pest_control" },
+                { id: "CALENDAR", icon: "calendar_month" },
+                { id: "PRESTIGE", icon: "military_tech" },
+                { id: "QUESTS", icon: "checklist" },
+                { id: "HELP", icon: "help" }
+              ] as { id: TabType; icon: string }[]).map((tab) => (
                 <button
                   key={tab.id}
                   id={`onboarding-tab-mobile-${tab.id.toLowerCase()}`}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`font-headline-md text-xs tracking-wider uppercase min-h-[48px] px-4 cursor-pointer whitespace-nowrap border-b-2 transition-all font-bold flex items-center justify-center gap-1.5 bg-surface-container-high/40 rounded ${activeTab === tab.id
-                      ? "text-primary border-primary bg-primary/10"
-                      : "text-on-surface-variant border-transparent opacity-70"
+                  className={`text-xs tracking-wider uppercase min-h-[40px] min-w-[40px] px-2 cursor-pointer whitespace-nowrap border-b-2 transition-all font-bold flex items-center justify-center bg-surface-container-high/40 rounded-lg ${activeTab === tab.id
+                      ? "text-primary border-primary bg-primary/15 shadow-[0_0_10px_rgba(233,193,118,0.2)]"
+                      : "text-on-surface-variant border-transparent opacity-60"
                     }`}
+                  title={tab.id.charAt(0) + tab.id.slice(1).toLowerCase()}
                 >
-                  <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="material-symbols-outlined text-lg">{tab.icon}</span>
                 </button>
               ))}
             </div>
@@ -502,28 +548,11 @@ export default function MainDashboard({
 
             {/* TAB 1: BIOMES PORTALS SELECTION */}
             {activeTab === "BIOMES" && (
-              <div className="max-w-2xl mx-auto animate-float">
+              <div className="max-w-2xl mx-auto">
                 <h2 className="font-headline-md text-headline-md text-primary mb-4 flex items-center gap-2 font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-xl">map</span>
-                  Portal Gateways
+                  Select Realm
                 </h2>
-                <p className="font-body-md text-sm text-on-surface-variant mb-6">
-                  Select an ancient dungeon dimension to descend into. Accumulate total souls to break locks.
-                </p>
-
-                {/* Play Button Row (Moved to Top) */}
-                <div className="mb-8 flex justify-center">
-                  <button
-                    id="onboarding-play-btn"
-                    onClick={onStartGame}
-                    className="stone-button w-full py-5 rounded-xl font-headline-md text-xl text-primary flex items-center justify-center gap-3 cursor-pointer select-none font-bold tracking-widest shadow-[0_0_20px_rgba(233,193,118,0.3)] hover:shadow-[0_0_30px_rgba(78,222,163,0.6)] uppercase hover:text-secondary group active:scale-95 transition-transform"
-                  >
-                    <span>ENTER PORTAL</span>
-                    <span className="material-symbols-outlined font-bold">
-                      local_fire_department
-                    </span>
-                  </button>
-                </div>
 
                 <div className="flex flex-col gap-4">
                   {BIOMES.map((biome) => {
@@ -594,14 +623,11 @@ export default function MainDashboard({
                 </div>
 
                 {/* Difficulty Selector Panel */}
-                <div className="glass-panel p-5 rounded-xl border border-outline-variant/30 mt-6 bg-[#1a1a1a]">
-                  <h3 className="font-headline-md text-sm text-primary mb-3 font-bold uppercase tracking-widest flex items-center gap-2">
+                <div className="glass-panel p-4 rounded-xl border border-outline-variant/30 mt-6 bg-[#1a1a1a]">
+                  <h3 className="font-headline-md text-xs text-primary mb-3 font-bold uppercase tracking-widest flex items-center gap-2">
                     <span className="material-symbols-outlined text-sm">skull</span>
-                    Difficulty Level Modifier
+                    Difficulty — up to +150%
                   </h3>
-                  <p className="text-xs text-on-surface-variant mb-4">
-                    Higher difficulties augment enemy aggressiveness, health, and spawn rates, but grant up to <strong className="text-secondary">+150% Souls and Coins</strong>.
-                  </p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(["EASY", "NORMAL", "HARD", "NIGHTMARE"] as const).map((diff) => {
                       const isActive = (saveState.difficultyLevel || "NORMAL") === diff;
@@ -621,20 +647,15 @@ export default function MainDashboard({
                         <button
                           key={diff}
                           onClick={() => onSelectDifficulty(diff)}
-                          className={`text-center py-2.5 rounded-lg border text-xs tracking-wider transition-all duration-150 uppercase cursor-pointer ${isActive ? activeColors[diff] : colors[diff]
+                          className={`text-center py-2 rounded-lg border text-xs tracking-wider transition-all duration-150 uppercase cursor-pointer ${isActive ? activeColors[diff] : colors[diff]
                             }`}
                         >
                           {diff}
-                          {diff === "EASY" && " (0.7x)"}
-                          {diff === "NORMAL" && " (1.0x)"}
-                          {diff === "HARD" && " (1.5x)"}
-                          {diff === "NIGHTMARE" && " (2.5x)"}
                         </button>
                       );
                     })}
                   </div>
                 </div>
-
 
               </div>
             )}
@@ -644,7 +665,7 @@ export default function MainDashboard({
               <div className="animate-float">
                 <h2 className="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2 font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-xl">star</span>
-                  Premium Serpent Skins
+                  Serpent Vault
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter mb-8">
@@ -764,14 +785,11 @@ export default function MainDashboard({
 
             {/* TAB 3: TALENT TREE PERMANENT PROGRESSION */}
             {activeTab === "TALENTS" && (
-              <div className="max-w-2xl mx-auto animate-float">
+              <div className="max-w-2xl mx-auto">
                 <h2 className="font-headline-md text-headline-md text-primary mb-4 flex items-center gap-2 font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-xl">upgrade</span>
-                  Eternal Talent Tree
+                  Talents
                 </h2>
-                <p className="font-body-md text-sm text-on-surface-variant mb-6">
-                  Spend gold coins to etch permanent magical runes onto the Serpent King, giving stats boosts in subsequent survival runs.
-                </p>
 
                 <div className="flex flex-col gap-4">
                   {INITIAL_TALENTS.map((talent) => {
@@ -839,11 +857,8 @@ export default function MainDashboard({
                   <div className="flex justify-between items-center gap-4 relative z-10">
                     <div>
                       <h3 className="font-headline-md text-lg text-secondary font-bold uppercase tracking-wide text-glow-secondary">
-                        Daily Sanctum Blessing
+                        Daily Blessing
                       </h3>
-                      <p className="font-body-md text-xs text-on-surface-variant mt-1 leading-relaxed">
-                        Unlock a free divine reward every 24 hours to fuel your ancient reign.
-                      </p>
                     </div>
 
                     {saveState.dailyChallengeClaimed ? (
@@ -868,7 +883,7 @@ export default function MainDashboard({
                 <section>
                   <h2 className="font-headline-md text-headline-md text-primary mb-4 flex items-center gap-2 font-bold uppercase tracking-wider">
                     <span className="material-symbols-outlined text-xl">priority_high</span>
-                    Active Dark Quests
+                    Quests
                   </h2>
 
                   <div className="flex flex-col gap-4">
@@ -928,11 +943,8 @@ export default function MainDashboard({
                   <div>
                     <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex items-center gap-2">
                       <span className="material-symbols-outlined text-xl">account_tree</span>
-                      Astral Skill Tree
+                      Skill Tree
                     </h2>
-                    <p className="font-body-md text-xs text-on-surface-variant mt-1">
-                      Spend acquired Skill Points to permanently mutate your serpent with ultimate spells and passive nodes.
-                    </p>
                   </div>
                   <div className="bg-cyan-500/10 border border-cyan-400/30 px-4 py-2 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
                     <span className="material-symbols-outlined text-cyan-400 animate-pulse">star</span>
@@ -946,7 +958,7 @@ export default function MainDashboard({
                 <section className="glass-panel p-5 rounded-xl border border-primary/20 mb-8 bg-[#181818]">
                   <h3 className="font-headline-md text-sm text-primary mb-4 font-bold uppercase tracking-widest flex items-center gap-2 border-b border-outline-variant/30 pb-2">
                     <span className="material-symbols-outlined text-sm">construction</span>
-                    Eternal Weapon & Magic Tiers
+                    Weapon & Magic
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Weapons tier upgrade */}
@@ -957,8 +969,8 @@ export default function MainDashboard({
                           TIER {saveState.weaponsLevel?.fangs || 1}
                         </span>
                       </div>
-                      <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed">
-                        Amplifies contact fangs damage by +15% per tier.
+                      <p className="text-[11px] text-on-surface-variant mb-4">
+                        +15% fang damage per tier
                       </p>
                       <button
                         onClick={() => onUpgradeWeaponMagic("WEAPON", "fangs", 1500 * (saveState.weaponsLevel?.fangs || 1))}
@@ -976,8 +988,8 @@ export default function MainDashboard({
                           TIER {saveState.magicLevel?.active || 1}
                         </span>
                       </div>
-                      <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed">
-                        Amplifies Cyclone & Spell aura damages by +20% per tier.
+                      <p className="text-[11px] text-on-surface-variant mb-4">
+                        +20% spell damage per tier
                       </p>
                       <button
                         onClick={() => onUpgradeWeaponMagic("MAGIC", "active", 1800 * (saveState.magicLevel?.active || 1))}
@@ -1075,11 +1087,8 @@ export default function MainDashboard({
                   <div>
                     <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex items-center gap-2">
                       <span className="material-symbols-outlined text-xl">brightness_7</span>
-                      Royal Relic Shrine
+                      Relics
                     </h2>
-                    <p className="font-body-md text-xs text-on-surface-variant mt-1">
-                      Acquire cosmic relics and attach up to <strong className="text-secondary">two relics</strong> simultaneously to warp your serpent abilities.
-                    </p>
                   </div>
 
                   {/* Equipped Relic Bar */}
@@ -1183,13 +1192,10 @@ export default function MainDashboard({
             {activeTab === "FORMS" && (
               <div className="max-w-4xl mx-auto animate-float">
                 <div className="mb-6">
-                  <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex items-center gap-2">
-                    <span className="material-symbols-outlined text-xl">pest_control</span>
-                    Mythological Serpent Forms
-                  </h2>
-                  <p className="font-body-md text-xs text-on-surface-variant mt-1">
-                    Ascend to unlock extreme serpent breeds. Different breeds feature visual and elemental damage alterations.
-                  </p>
+                    <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex items-center gap-2">
+                      <span className="material-symbols-outlined text-xl">pest_control</span>
+                      Forms
+                    </h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
@@ -1292,13 +1298,10 @@ export default function MainDashboard({
             {activeTab === "CALENDAR" && (
               <div className="max-w-3xl mx-auto animate-float">
                 <div className="text-center mb-6">
-                  <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex justify-center items-center gap-2">
-                    <span className="material-symbols-outlined text-xl">calendar_month</span>
-                    Abyssal Login Calendar
-                  </h2>
-                  <p className="font-body-md text-xs text-on-surface-variant mt-1">
-                    Descend consecutive days to claim dynamic currency packets and crystals.
-                  </p>
+                    <h2 className="font-headline-md text-headline-md text-primary font-bold uppercase tracking-wider flex justify-center items-center gap-2">
+                      <span className="material-symbols-outlined text-xl">calendar_month</span>
+                      Calendar
+                    </h2>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
@@ -1380,13 +1383,10 @@ export default function MainDashboard({
             {activeTab === "PRESTIGE" && (
               <div className="max-w-2xl mx-auto animate-float">
                 <div className="text-center mb-6">
-                  <h2 className="font-headline-md text-headline-md text-purple-400 font-bold uppercase tracking-wider flex justify-center items-center gap-2">
-                    <span className="material-symbols-outlined text-xl">military_tech</span>
-                    Royal Ascension Altar
-                  </h2>
-                  <p className="font-body-md text-xs text-on-surface-variant mt-1">
-                    Evolve past temporal shells to unlock prestige multipliers on scores and currency yield.
-                  </p>
+                    <h2 className="font-headline-md text-headline-md text-purple-400 font-bold uppercase tracking-wider flex justify-center items-center gap-2">
+                      <span className="material-symbols-outlined text-xl">military_tech</span>
+                      Prestige
+                    </h2>
                 </div>
 
                 <section className="glass-panel p-6 rounded-xl border border-purple-500/30 bg-[#191522] relative overflow-hidden">
@@ -1674,9 +1674,6 @@ export default function MainDashboard({
                   How To Play
                 </h2>
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
-                  <p className="text-on-surface-variant font-body">
-                    The ancient codex of the Serpent Kingdom. Read this carefully to survive the dangerous biomes and reclaim your throne.
-                  </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => {
