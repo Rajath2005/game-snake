@@ -742,10 +742,14 @@ export default function App() {
     setActiveRunXp(0);
     setShowGameOver(false);
     setJustDefeatedBoss(false);
+    setRunStats(null);
     setScreen("GAMEPLAY");
   };
 
-  const handleGameOver = (finalScore: number, coins: number, xp: number, defBoss: boolean) => {
+  const [runStats, setRunStats] = useState<{ timeSurvived: number; enemiesKilled: number; soulsCollected: number; distanceTraveled: number; damageDealt: number } | null>(null);
+
+  const handleGameOver = (finalScore: number, coins: number, xp: number, defBoss: boolean, stats?: { timeSurvived: number; enemiesKilled: number; soulsCollected: number; distanceTraveled: number; damageDealt: number }) => {
+    setRunStats(stats || null);
     // 1. Difficulty reward multipliers
     let diffMult = 1.0;
     if (saveState.difficultyLevel === "EASY") diffMult = 0.7;
@@ -943,6 +947,7 @@ export default function App() {
 
   const handleCloseGameOver = () => {
     setShowGameOver(false);
+    setRunStats(null);
     if (justDefeatedBoss) {
       // Trigger legendary boss reward claim dialog first!
       setShowAchievementUnlock(true);
@@ -990,11 +995,14 @@ export default function App() {
       
       {/* 1. INITIAL LOADING SCREEN */}
       {screen === "LOADING" && (
-        <LoadingScreen onFinishedLoading={() => setScreen("CAMP")} />
+        <div className="screen-fade-in" key="loading">
+          <LoadingScreen onFinishedLoading={() => setScreen("CAMP")} />
+        </div>
       )}
 
       {/* 2. CAMP MAIN DASHBOARD */}
       {screen === "CAMP" && !showSettings && (
+        <div className="screen-slide-up h-full" key="camp">
         <MainDashboard
           saveState={saveState}
           onSelectSkin={handleSelectSkin}
@@ -1031,6 +1039,7 @@ export default function App() {
           onSelectDifficulty={handleSelectDifficulty}
           onSaveStateUpdate={saveToLocalStorage}
         />
+        </div>
       )}
 
       {/* 3. SETTINGS OVERLAY PANEL */}
@@ -1054,7 +1063,7 @@ export default function App() {
 
       {/* 4. ACTIVE GAMEPLAY HUD & CANVAS */}
       {screen === "GAMEPLAY" && (
-        <div className="w-full h-full relative">
+        <div className="w-full h-full relative screen-portal-in" key="gameplay">
           {/* Main 2D engine */}
           <div className={`absolute inset-x-0 bottom-0 ${!isDemoMode ? 'top-[calc(3.5rem+env(safe-area-inset-top,0px))]' : 'top-0'}`}>
             <GameCanvas
@@ -1164,13 +1173,14 @@ export default function App() {
           score={activeRunScore}
           highScore={saveState.highScore}
           isNewRecord={activeRunScore >= saveState.highScore}
-          coinsEarned={activeRunCoins}
-          xpEarned={activeRunXp}
-          onRetry={handleStartGame}
-          onContinue={handleCloseGameOver}
-          onShare={handleShare}
-          onOpenLeaderboard={() => showCustomAlert("Retrieving Royal Leaderboards from local vault...", "VAULT ACCESS")}
-        />
+            coinsEarned={activeRunCoins}
+            xpEarned={activeRunXp}
+            runStats={runStats}
+            onRetry={handleStartGame}
+            onContinue={handleCloseGameOver}
+            onShare={handleShare}
+            onOpenLeaderboard={() => showCustomAlert("Retrieving Royal Leaderboards from local vault...", "VAULT ACCESS")}
+          />
       )}
 
       {/* 6. ACHIEVEMENT UNLOCKED NOTIFICATION */}

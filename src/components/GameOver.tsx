@@ -1,11 +1,20 @@
 import React from "react";
 
+interface RunStats {
+  timeSurvived: number;
+  enemiesKilled: number;
+  soulsCollected: number;
+  distanceTraveled: number;
+  damageDealt: number;
+}
+
 interface GameOverProps {
   score: number;
   highScore: number;
   isNewRecord: boolean;
   coinsEarned: number;
   xpEarned: number;
+  runStats: RunStats | null;
   onRetry: () => void;
   onContinue: () => void;
   onShare: () => void;
@@ -18,6 +27,7 @@ export default function GameOver({
   isNewRecord,
   coinsEarned,
   xpEarned,
+  runStats,
   onRetry,
   onContinue,
   onShare,
@@ -85,7 +95,7 @@ export default function GameOver({
             <div className="w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent my-6" />
 
             {/* Rewards */}
-            <div className="w-full flex justify-around mb-8">
+            <div className="w-full flex justify-around mb-4">
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center border border-primary/50 mb-2 shadow-[0_0_10px_rgba(233,193,118,0.3)]">
                   <span className="material-symbols-outlined text-primary text-2xl font-bold">
@@ -106,6 +116,35 @@ export default function GameOver({
                 <p className="font-label-numeric text-label-numeric text-secondary font-bold">+{xpEarned}</p>
               </div>
             </div>
+
+            {/* Death Recap Stats */}
+            {runStats && (
+              <>
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent my-4" />
+              <div className="w-full grid grid-cols-2 gap-3 mb-4">
+                <div className="glass-panel rounded-lg p-3 text-center border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-primary text-lg block mb-0.5">schedule</span>
+                  <p className="font-label-numeric text-label-numeric text-primary text-sm font-bold">{Math.floor(runStats.timeSurvived)}s</p>
+                  <p className="font-label-sm text-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-0.5">Time</p>
+                </div>
+                <div className="glass-panel rounded-lg p-3 text-center border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-secondary text-lg block mb-0.5">skull</span>
+                  <p className="font-label-numeric text-label-numeric text-secondary text-sm font-bold">{runStats.enemiesKilled}</p>
+                  <p className="font-label-sm text-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-0.5">Slain</p>
+                </div>
+                <div className="glass-panel rounded-lg p-3 text-center border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-primary text-lg block mb-0.5">eco</span>
+                  <p className="font-label-numeric text-label-numeric text-primary text-sm font-bold">{runStats.soulsCollected}</p>
+                  <p className="font-label-sm text-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-0.5">Souls</p>
+                </div>
+                <div className="glass-panel rounded-lg p-3 text-center border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-secondary text-lg block mb-0.5">swords</span>
+                  <p className="font-label-numeric text-label-numeric text-secondary text-sm font-bold">{Math.floor(runStats.damageDealt)}</p>
+                  <p className="font-label-sm text-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-0.5">Dmg</p>
+                </div>
+              </div>
+              </>
+            )}
 
             {/* Actions */}
             <div className="w-full flex flex-col gap-3 mt-4">

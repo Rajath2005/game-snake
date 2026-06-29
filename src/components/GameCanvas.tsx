@@ -13,7 +13,7 @@ interface GameCanvasProps {
   cooldownReduction: number;
   isDemoMode?: boolean;
   isTutorialMode?: boolean;
-  onGameOver: (finalScore: number, coinsEarned: number, xpEarned: number, defeatedBoss: boolean) => void;
+  onGameOver: (finalScore: number, coinsEarned: number, xpEarned: number, defeatedBoss: boolean, runStats?: { timeSurvived: number; enemiesKilled: number; soulsCollected: number; distanceTraveled: number; damageDealt: number }) => void;
   onQuestProgress: (id: string, increment: number) => void;
   isPaused: boolean;
   setIsPaused: (paused: boolean) => void;
@@ -286,6 +286,15 @@ export default function GameCanvas({
 
     // Extended revival tracking
     hasRevived: false,
+
+    // Death camera & slow-mo
+    isDying: false,
+    deathTimer: 0,
+    deathPos: { x: 0, y: 0 } as Point,
+
+    // Run stats (for death recap)
+    timeSurvived: 0,
+    damageDealt: 0,
 
     // Extended progression systems state
     spores: [] as { x: number; y: number; vx: number; vy: number; life: number; damage: number }[],
@@ -1000,6 +1009,7 @@ export default function GameCanvas({
       if (elapsed >= frameInterval - 1) {
         lastTime = timestamp;
         s.frameCount++;
+        s.timeSurvived += 1 / 60;
 
       // Advance gameplay tutorial steps based on player progression
       if (tutorialStepRef.current) {
@@ -1052,6 +1062,7 @@ export default function GameCanvas({
           const dist = Math.hypot(dx, dy);
           if (dist < 900) {
             enemy.hp -= 40;
+            s.damageDealt += 40;
             enemy.flashTimer = 10;
             const kAngle = Math.atan2(dy, dx);
             enemy.knockbackX = Math.cos(kAngle) * 18;
@@ -1087,6 +1098,7 @@ export default function GameCanvas({
           targets.forEach(t => {
             const enemy = t.enemy;
             enemy.hp -= 25;
+            s.damageDealt += 25;
             enemy.flashTimer = 8;
             s.floatingTexts.push({
               x: enemy.x,
@@ -1782,6 +1794,7 @@ export default function GameCanvas({
             const distT = Math.hypot(oCx - cX, oCy - cY);
             if (distT < Math.max(ob.width, ob.height) && !ob.trapTriggered && ob.trapCooldown > 150) {
               enemy.hp -= 10;
+              s.damageDealt += 10;
               enemy.flashTimer = Math.max(enemy.flashTimer || 0, 5);
             }
           }
@@ -1796,6 +1809,7 @@ export default function GameCanvas({
             enemy.x += (s.cyclonePos.x - enemy.x) * 0.08;
             enemy.y += (s.cyclonePos.y - enemy.y) * 0.08;
             enemy.hp -= 0.6; // continuous cyclone ticks
+            s.damageDealt += 0.6;
             enemy.flashTimer = 2; // quick flash
           }
         }
@@ -1804,6 +1818,7 @@ export default function GameCanvas({
         if (s.speed > (4 + speedBonus) * 2.1 && distToPlayerSq < 1600) { // 40 * 40 = 1600
           const dashDmg = 25;
           enemy.hp -= dashDmg; // Massive hit
+          s.damageDealt += dashDmg;
           enemy.flashTimer = 5;
           
           AudioManager.playMetalImpact();
@@ -1851,6 +1866,7 @@ export default function GameCanvas({
                 whipDmg += skillsUnlocked["body_armor"] * 4; // Spiked Carapace skill
               }
               enemy.hp -= whipDmg;
+              s.damageDealt += whipDmg;
               enemy.flashTimer = 2;
               if (Math.random() < 0.15) {
                 AudioManager.playMetalImpact();
@@ -2358,6 +2374,7 @@ export default function GameCanvas({
             // Barbed Thorn Collar reflection
             if (equippedRelics.includes("thorns")) {
               enemy.hp -= 15;
+              s.damageDealt += 15;
               s.floatingTexts.push({
                 x: enemy.x,
                 y: enemy.y - 15,
@@ -2371,6 +2388,7 @@ export default function GameCanvas({
             // Wolves, knights, assassins, skeletons die on impact with shields
             if (enemy.type === "wolf" || enemy.type === "knight" || enemy.type === "skeleton" || enemy.type === "assassin") {
               enemy.hp -= 5;
+              s.damageDealt += 5;
             }
           }
         }
@@ -2670,17 +2688,41 @@ export default function GameCanvas({
 
           // Explode particles
           triggerParticleBurst(head.x, head.y, "#f87171", 35);
-        } else {
-          // Run over! Calculate rewards earned
+        } else if (!s.isDying) {
+          // Start death camera sequence
+          const headSeg = s.serpentSegments[0];
+          s.isDying = true;
+          s.deathTimer = 90;
+          s.deathPos = headSeg ? { x: headSeg.x, y: headSeg.y } : { x: arenaWidth / 2, y: arenaHeight / 2 };
+          s.screenFlash = 1.0;
+          s.shakeAmount = 30;
+        }
+      }
+
+      // Death camera sequence
+      if (s.isDying) {
+        s.deathTimer--;
+        s.screenFlash = Math.max(0, 1.0 - (90 - s.deathTimer) / 90 * 0.85);
+        if (s.shakeAmount > 0.5) s.shakeAmount *= 0.9;
+
+        if (s.deathTimer <= 0) {
           const finalCoins = Math.ceil((s.score / 150) * goldMultiplier);
           const finalXp = Math.ceil((s.score / 70));
-          
-          // Find if boss died (if boss active is false but boss spawned)
-          const defBoss = s.score >= 15000; 
-
-          onGameOver(s.score, finalCoins, finalXp, defBoss);
+          const defBoss = s.score >= 15000;
+          onGameOver(s.score, finalCoins, finalXp, defBoss, {
+            timeSurvived: s.timeSurvived,
+            enemiesKilled: s.enemiesKilled,
+            soulsCollected: s.soulsCollected,
+            distanceTraveled: s.distanceTraveled,
+            damageDealt: s.damageDealt,
+          });
           return;
         }
+        // Skip rest of physics while dying — only camera/effects update
+        s.souls.length = 0;
+        s.enemies.length = 0;
+        s.projectiles.length = 0;
+        s.floatingTexts.length = 0;
       }
 
       // Report boss state to parent
@@ -2716,13 +2758,22 @@ export default function GameCanvas({
       ctx.save();
       
       // CAMERA SYSTEM (Center camera smooth follow with interpolation & boundary clamping)
-      const camHead = s.serpentSegments[0] || s.cameraPos;
-      const targetCamX = camHead.x - dimensions.width / 2;
-      const targetCamY = camHead.y - dimensions.height / 2;
-
-      // Smooth camera interpolation (lerp)
-      s.cameraPos.x += (targetCamX - s.cameraPos.x) * 0.12;
-      s.cameraPos.y += (targetCamY - s.cameraPos.y) * 0.12;
+      let deathZoom = 1;
+      if (s.isDying) {
+        // Zoom camera onto death position
+        const deathProgress = 1 - s.deathTimer / 90;
+        deathZoom = 1 + deathProgress * 0.8;
+        const targetDeathX = s.deathPos.x - dimensions.width / 2 / deathZoom;
+        const targetDeathY = s.deathPos.y - dimensions.height / 2 / deathZoom;
+        s.cameraPos.x += (targetDeathX - s.cameraPos.x) * 0.08;
+        s.cameraPos.y += (targetDeathY - s.cameraPos.y) * 0.08;
+      } else {
+        const camHead = s.serpentSegments[0] || s.cameraPos;
+        const targetCamX = camHead.x - dimensions.width / 2;
+        const targetCamY = camHead.y - dimensions.height / 2;
+        s.cameraPos.x += (targetCamX - s.cameraPos.x) * 0.12;
+        s.cameraPos.y += (targetCamY - s.cameraPos.y) * 0.12;
+      }
 
       // Arena boundary clamping (prevents showing outer space)
       const minCamX = 0;
@@ -2742,6 +2793,12 @@ export default function GameCanvas({
       }
 
       ctx.translate(-clampedCamX + shakeX, -clampedCamY + shakeY);
+      if (deathZoom > 1) {
+        const cx = s.deathPos.x - clampedCamX + shakeX;
+        const cy = s.deathPos.y - clampedCamY + shakeY;
+        ctx.translate(cx * (1 - deathZoom), cy * (1 - deathZoom));
+        ctx.scale(deathZoom, deathZoom);
+      }
 
       // Draw Dungeon Floor Grid/Runes
       ctx.strokeStyle = "rgba(78, 222, 163, 0.05)";
@@ -3684,6 +3741,36 @@ export default function GameCanvas({
       if (s.screenFlash > 0.01) {
         ctx.fillStyle = `rgba(125, 0, 10, ${s.screenFlash})`;
         ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+      }
+
+      // Death camera vignette + text
+      if (s.isDying) {
+        const deathProgress = 1 - s.deathTimer / 90;
+        // Dark vignette that ramps up
+        const vignetteOpacity = Math.min(deathProgress * 1.5, 0.6);
+        const grad = ctx.createRadialGradient(
+          dimensions.width / 2, dimensions.height / 2, dimensions.width * 0.1,
+          dimensions.width / 2, dimensions.height / 2, dimensions.width * 0.7
+        );
+        grad.addColorStop(0, "transparent");
+        grad.addColorStop(1, `rgba(0, 0, 0, ${vignetteOpacity})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+
+        // "SERPENT FALLEN" text fade in
+        if (deathProgress > 0.3) {
+          const textAlpha = Math.min((deathProgress - 0.3) / 0.4, 1);
+          ctx.save();
+          ctx.globalAlpha = textAlpha;
+          ctx.fillStyle = "#ffb4ab";
+          ctx.font = "bold 42px Cinzel, serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.shadowColor = "rgba(255, 180, 171, 0.6)";
+          ctx.shadowBlur = 20;
+          ctx.fillText("SERPENT FALLEN", dimensions.width / 2, dimensions.height / 2 - 10);
+          ctx.restore();
+        }
       }
 
       // Draw Time Slow grey desaturation vignette
