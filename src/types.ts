@@ -16,6 +16,7 @@ export interface Biome {
   accentColor: string;
   ambientParticles: string; // "snow", "fog", "embers", etc.
   unlockedAtSouls: number;
+  terrainFeatures: string[]; // e.g. "rune_circle", "ice_patch", etc.
 }
 
 export interface Talent {
@@ -214,7 +215,8 @@ export const BIOMES: Biome[] = [
     bgColor: "#131313",
     accentColor: "#4edea3",
     ambientParticles: "emerald-fog",
-    unlockedAtSouls: 0
+    unlockedAtSouls: 0,
+    terrainFeatures: ["rune_circle"]
   },
   {
     type: BiomeType.FrozenKingdom,
@@ -223,7 +225,8 @@ export const BIOMES: Biome[] = [
     bgColor: "#0f1620",
     accentColor: "#7dd3fc",
     ambientParticles: "snow",
-    unlockedAtSouls: 100
+    unlockedAtSouls: 100,
+    terrainFeatures: ["ice_patch"]
   },
   {
     type: BiomeType.HauntedForest,
@@ -232,7 +235,8 @@ export const BIOMES: Biome[] = [
     bgColor: "#111812",
     accentColor: "#a7f3d0",
     ambientParticles: "fog",
-    unlockedAtSouls: 300
+    unlockedAtSouls: 300,
+    terrainFeatures: ["fog_pocket", "grave"]
   },
   {
     type: BiomeType.VolcanicRuins,
@@ -241,7 +245,8 @@ export const BIOMES: Biome[] = [
     bgColor: "#1c0d0d",
     accentColor: "#f87171",
     ambientParticles: "embers",
-    unlockedAtSouls: 600
+    unlockedAtSouls: 600,
+    terrainFeatures: ["lava_pool", "fire_geyser"]
   },
   {
     type: BiomeType.PoisonSwamp,
@@ -250,7 +255,8 @@ export const BIOMES: Biome[] = [
     bgColor: "#141510",
     accentColor: "#bef264",
     ambientParticles: "spores",
-    unlockedAtSouls: 1000
+    unlockedAtSouls: 1000,
+    terrainFeatures: ["poison_bog", "toxic_vent"]
   }
 ];
 

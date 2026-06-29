@@ -64,6 +64,9 @@ export default function App() {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [isTutorialMode, setIsTutorialMode] = useState(false);
 
+  // First-time visitor tracking
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+
   // Custom interactive modal dialog replacing blocking alerts/confirms
   const [modalDialog, setModalDialog] = useState<{
     title: string;
@@ -137,6 +140,10 @@ export default function App() {
         console.error("Error loading serpent saveState, using initial defaults", e);
       }
     }
+
+    // Check if this is first visit
+    const hasVisited = localStorage.getItem("serpent_first_visit_complete");
+    setIsFirstVisit(!hasVisited);
   }, []);
 
   // Sync volume settings with AudioManager
@@ -249,6 +256,11 @@ export default function App() {
     if (!localStorage.getItem("serpent_welcome_chest_claimed")) {
       setWelcomeChestActive(true);
     }
+  };
+
+  const handleMarkFirstVisitComplete = () => {
+    localStorage.setItem("serpent_first_visit_complete", "true");
+    setIsFirstVisit(false);
   };
 
   const handleClaimWelcomeChest = (rewards: { gold: number; souls: number; crystals: number; achievementId: string }) => {
@@ -964,6 +976,8 @@ export default function App() {
           }}
           activeTab={dashboardActiveTab}
           onChangeTab={setDashboardActiveTab}
+          isFirstVisit={isFirstVisit}
+          onMarkFirstVisitComplete={handleMarkFirstVisitComplete}
           
           // Extended progression props
           onUnlockSkill={handleUnlockSkill}
@@ -1004,7 +1018,8 @@ export default function App() {
       {screen === "GAMEPLAY" && (
         <div className="w-full h-full relative">
           {/* Main 2D engine */}
-          <GameCanvas
+          <div className={`absolute inset-x-0 bottom-0 ${!isDemoMode ? 'top-[calc(3.5rem+env(safe-area-inset-top,0px))]' : 'top-0'}`}>
+            <GameCanvas
             biome={selectedBiome}
             settings={saveState.settings}
             equippedSkin={activeSkinObj}
@@ -1036,6 +1051,7 @@ export default function App() {
             weaponsLevel={saveState.weaponsLevel || { fangs: 1, body: 1 }}
             magicLevel={saveState.magicLevel || { active: 1, ultimate: 0 }}
           />
+          </div>
 
           {/* HUD widgets */}
           {!isDemoMode && (

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Biome, GameSettings, Skin } from "../types";
+import { Biome, BiomeType, GameSettings, Skin } from "../types";
 import { AudioManager } from "../lib/audio";
 
 interface GameCanvasProps {
@@ -119,6 +119,41 @@ interface FloatingText {
   vx?: number;
 }
 
+type TerrainType = "rune_circle" | "ice_patch" | "fog_pocket" | "grave" | "lava_pool" | "fire_geyser" | "poison_bog" | "toxic_vent";
+
+interface TerrainTile {
+  x: number;
+  y: number;
+  radius: number;
+  type: TerrainType;
+  animTimer: number;
+  cooldown: number;
+  active: boolean;
+  width?: number;
+  height?: number;
+}
+
+interface ArenaObstacle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: "wall" | "spikes" | "trap" | "moving_barrier";
+  color: string;
+  accentColor: string;
+  trapTriggered: boolean;
+  trapCooldown: number;
+  spikesExtended: boolean;
+  spikeAnimTimer: number;
+  moveStartX: number;
+  moveStartY: number;
+  moveEndX: number;
+  moveEndY: number;
+  moveProgress: number;
+  moveForward: boolean;
+  moveSpeed: number;
+}
+
 export default function GameCanvas({
   biome,
   settings,
@@ -232,6 +267,7 @@ export default function GameCanvas({
     
     // Inputs
     mousePos: { x: 0, y: 0 } as Point,
+    mouseActive: false,
     keys: {} as Record<string, boolean>,
     touchStart: { x: 0, y: 0 } as Point,
     touchCurrent: { x: 0, y: 0 } as Point,
@@ -253,7 +289,14 @@ export default function GameCanvas({
     // Extended progression systems state
     spores: [] as { x: number; y: number; vx: number; vy: number; life: number; damage: number }[],
     tempestLightnings: [] as { x1: number; y1: number; x2: number; y2: number; life: number }[],
-    frameCount: 0
+    frameCount: 0,
+    
+    // Terrain features
+    terrainTiles: [] as TerrainTile[],
+    isOnIce: false,
+    
+    // Arena obstacles
+    arenaObstacles: [] as ArenaObstacle[]
   });
 
   // Base configurations
@@ -363,6 +406,213 @@ export default function GameCanvas({
     // Spawn starting enemies
     for (let i = 0; i < 15; i++) {
       spawnEnemy();
+    }
+
+    // Generate terrain features based on biome
+    s.terrainTiles = [];
+    s.isOnIce = false;
+    const margin = 100;
+    const terrainTypes = biome.terrainFeatures || [];
+
+    terrainTypes.forEach((tf: string) => {
+      const count = tf === "grave" ? 18 : tf === "fire_geyser" || tf === "toxic_vent" ? 6 : 12;
+      for (let i = 0; i < count; i++) {
+        let x: number, y: number;
+        let radius = 60;
+        let width: number | undefined;
+        let height: number | undefined;
+
+        if (tf === "ice_patch") {
+          radius = 0;
+          width = 90 + Math.random() * 60;
+          height = 90 + Math.random() * 60;
+          x = margin + Math.random() * (arenaWidth - margin * 2 - width);
+          y = margin + Math.random() * (arenaHeight - margin * 2 - height);
+        } else if (tf === "grave") {
+          radius = 0;
+          width = 20;
+          height = 28;
+          x = margin + Math.random() * (arenaWidth - margin * 2);
+          y = margin + Math.random() * (arenaHeight - margin * 2);
+        } else if (tf === "fire_geyser" || tf === "toxic_vent") {
+          radius = 18;
+          x = margin + Math.random() * (arenaWidth - margin * 2);
+          y = margin + Math.random() * (arenaHeight - margin * 2);
+        } else {
+          radius = 50 + Math.random() * 30;
+          x = margin + Math.random() * (arenaWidth - margin * 2);
+          y = margin + Math.random() * (arenaHeight - margin * 2);
+        }
+
+        // Avoid spawning on player start
+        const cx = arenaWidth / 2;
+        const cy = arenaHeight / 2;
+        const distToCenter = Math.hypot(x - cx, y - cy);
+        if (distToCenter < 150) {
+          x = cx + 200 + Math.random() * 300;
+          y = cy + 200 + Math.random() * 300;
+        }
+
+        s.terrainTiles.push({
+          x, y, radius,
+          type: tf as TerrainType,
+          animTimer: Math.random() * 100,
+          cooldown: tf === "fire_geyser" ? 160 + Math.random() * 60 : tf === "toxic_vent" ? 200 + Math.random() * 80 : 0,
+          active: false,
+          width, height
+        });
+      }
+    });
+
+    // ==========================================
+    // GENERATE ARENA OBSTACLES PER BIOME
+    // ==========================================
+    s.arenaObstacles = [];
+    const genRandPos = (pad = 120) => ({
+      x: pad + Math.random() * (arenaWidth - pad * 2),
+      y: pad + Math.random() * (arenaHeight - pad * 2)
+    });
+
+    const avoidCenter = (p: { x: number; y: number }, minDist = 250) => {
+      const cxA = arenaWidth / 2, cyA = arenaHeight / 2;
+      if (Math.hypot(p.x - cxA, p.y - cyA) < minDist) {
+        const a = Math.random() * Math.PI * 2;
+        p.x = cxA + Math.cos(a) * (minDist + 80 + Math.random() * 200);
+        p.y = cyA + Math.sin(a) * (minDist + 80 + Math.random() * 200);
+        p.x = Math.max(20, Math.min(arenaWidth - 20, p.x));
+        p.y = Math.max(20, Math.min(arenaHeight - 20, p.y));
+      }
+      return p;
+    };
+
+    const push = (obs: ArenaObstacle[]) => { obs.forEach(o => s.arenaObstacles.push(o)); };
+
+    if (biome.type === BiomeType.Abyss) {
+      const positions = [
+        { x: 300, y: 350 }, { x: 600, y: 700 }, { x: 900, y: 200 },
+        { x: 1500, y: 1400 }, { x: 1900, y: 900 }, { x: 1200, y: 1500 },
+        { x: 2100, y: 400 }, { x: 400, y: 1500 }
+      ];
+      positions.forEach(p => {
+        push([{
+          ...p, width: 45, height: 130,
+          type: "wall", color: "#1a1a2e", accentColor: "#4edea3",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      });
+    } else if (biome.type === BiomeType.FrozenKingdom) {
+      for (let i = 0; i < 6; i++) {
+        const p = avoidCenter(genRandPos());
+        push([{
+          ...p, width: 35, height: 180,
+          type: "wall", color: "#1a2a4a", accentColor: "#7dd3fc",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      for (let i = 0; i < 8; i++) {
+        const p = avoidCenter(genRandPos(), 200);
+        push([{
+          ...p, width: 22, height: 22,
+          type: "spikes", color: "#7dd3fc", accentColor: "#e0f2fe",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: Math.random() * 60,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+    } else if (biome.type === BiomeType.HauntedForest) {
+      for (let i = 0; i < 8; i++) {
+        const p = avoidCenter(genRandPos());
+        push([{
+          ...p, width: 38, height: 38,
+          type: "wall", color: "#1a1508", accentColor: "#a7f3d0",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      for (let i = 0; i < 6; i++) {
+        const p = avoidCenter(genRandPos(), 180);
+        push([{
+          ...p, width: 50, height: 50,
+          type: "trap", color: "#1a1a1a", accentColor: "#a7f3d0",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+    } else if (biome.type === BiomeType.VolcanicRuins) {
+      for (let i = 0; i < 5; i++) {
+        const p = avoidCenter(genRandPos());
+        push([{
+          ...p, width: 55, height: 140,
+          type: "wall", color: "#2a0a0a", accentColor: "#f87171",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      for (let i = 0; i < 5; i++) {
+        const p = avoidCenter(genRandPos(), 200);
+        push([{
+          ...p, width: 25, height: 25,
+          type: "spikes", color: "#f87171", accentColor: "#fca5a5",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: Math.random() * 60,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      // Moving barriers — 2 patrols
+      const mb1 = { x: 800, y: 600, width: 35, height: 140, color: "#3a1515", accentColor: "#f87171" };
+      const mb2 = { x: 1600, y: 900, width: 140, height: 35, color: "#3a1515", accentColor: "#f87171" };
+      push([
+        { ...mb1, type: "moving_barrier", trapTriggered: false, trapCooldown: 0, spikesExtended: true, spikeAnimTimer: 0, moveStartX: 600, moveStartY: 600, moveEndX: 1000, moveEndY: 600, moveProgress: 0, moveForward: true, moveSpeed: 0.006 },
+        { ...mb2, type: "moving_barrier", trapTriggered: false, trapCooldown: 0, spikesExtended: true, spikeAnimTimer: 0, moveStartX: 1600, moveStartY: 700, moveEndX: 1600, moveEndY: 1200, moveProgress: 0.5, moveForward: true, moveSpeed: 0.005 }
+      ]);
+    } else if (biome.type === BiomeType.PoisonSwamp) {
+      for (let i = 0; i < 6; i++) {
+        const p = avoidCenter(genRandPos());
+        push([{
+          ...p, width: 25, height: 160,
+          type: "wall", color: "#1a1a0a", accentColor: "#bef264",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      for (let i = 0; i < 4; i++) {
+        const p = avoidCenter(genRandPos(), 180);
+        push([{
+          ...p, width: 55, height: 55,
+          type: "trap", color: "#1a1a0a", accentColor: "#bef264",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: 0,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
+      for (let i = 0; i < 5; i++) {
+        const p = avoidCenter(genRandPos(), 200);
+        push([{
+          ...p, width: 22, height: 22,
+          type: "spikes", color: "#bef264", accentColor: "#d9f99d",
+          trapTriggered: false, trapCooldown: 0,
+          spikesExtended: true, spikeAnimTimer: Math.random() * 60,
+          moveStartX: 0, moveStartY: 0, moveEndX: 0, moveEndY: 0,
+          moveProgress: 0, moveForward: true, moveSpeed: 0
+        }]);
+      }
     }
 
     setScore(0);
@@ -735,8 +985,7 @@ export default function GameCanvas({
     const s = stateRef.current;
 
     let lastTime = performance.now();
-    const targetFps = 60;
-    const frameInterval = 1000 / targetFps;
+    const frameInterval = 1000 / 60;
 
     const gameLoop = (timestamp: number) => {
       animId = requestAnimationFrame(gameLoop);
@@ -745,13 +994,11 @@ export default function GameCanvas({
       }
 
       const elapsed = timestamp - lastTime;
-      if (elapsed < frameInterval - 1) { // 1ms threshold for frame rate pacing
-        return;
-      }
-      lastTime = timestamp - (elapsed % frameInterval);
+      const dt = Math.min(elapsed / frameInterval, 3);
 
-      // Increment frame clock
-      s.frameCount++;
+      if (elapsed >= frameInterval - 1) {
+        lastTime = timestamp;
+        s.frameCount++;
 
       // Advance gameplay tutorial steps based on player progression
       if (tutorialStepRef.current) {
@@ -890,14 +1137,21 @@ export default function GameCanvas({
         if (s.comboTimer === 0) s.combo = 1;
       }
 
+      // Trap cooldowns
+      for (let oi = 0; oi < s.arenaObstacles.length; oi++) {
+        const ob = s.arenaObstacles[oi];
+        if (ob.type === "trap") {
+          if (ob.trapCooldown > 0) ob.trapCooldown--;
+          if (ob.trapCooldown <= 0) ob.trapTriggered = false;
+        }
+      }
+
       // Handle screen effects fade
       if (s.shakeAmount > 0) s.shakeAmount *= 0.92;
       if (s.screenFlash > 0) s.screenFlash -= 0.05;
 
       // 2. INPUT STEERING
       const head = s.serpentSegments[0];
-      let steeringX = 0;
-      let steeringY = 0;
 
       // DEMO MODE AUTOMATION AI
       if (isDemoMode) {
@@ -960,16 +1214,16 @@ export default function GameCanvas({
       }
 
       // Keyboard Controls (Smooth rotation or direct WASD)
+      const steerRate = (s.isOnIce ? 0.14 : 0.07) * dt;
       if (s.keys["a"] || s.keys["arrowleft"]) {
-        s.headingAngle -= 0.07;
+        s.headingAngle -= steerRate;
       }
       if (s.keys["d"] || s.keys["arrowright"]) {
-        s.headingAngle += 0.07;
+        s.headingAngle += steerRate;
       }
       if (s.keys["w"] || s.keys["arrowup"]) {
-        // Direct move boost
-        steeringX += Math.cos(s.headingAngle);
-        steeringY += Math.sin(s.headingAngle);
+        // Forward speed boost while held
+        s.targetSpeed = (4 + speedBonus) * 2.2;
       }
 
       // Touch virtual joystick steering
@@ -977,16 +1231,16 @@ export default function GameCanvas({
         const tDx = s.touchCurrent.x - s.touchStart.x;
         const tDy = s.touchCurrent.y - s.touchStart.y;
         const tDist = Math.hypot(tDx, tDy);
-        if (tDist > 5) {
+        if (tDist > 15) {
           const targetAngle = Math.atan2(tDy, tDx);
           let angleDiff = targetAngle - s.headingAngle;
           while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
           while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-          s.headingAngle += angleDiff * 0.15;
+          s.headingAngle += angleDiff * (0.2 * dt);
         }
       }
       // Follow Mouse Angle if dragging/moving
-      else if (s.mousePos.x !== 0 || s.mousePos.y !== 0) {
+      else if (s.mouseActive) {
         // Map viewport mouse coordinates to our current viewport camera offset
         const camX = head.x - dimensions.width / 2;
         const camY = head.y - dimensions.height / 2;
@@ -1000,11 +1254,26 @@ export default function GameCanvas({
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         
-        s.headingAngle += angleDiff * 0.1;
+        s.headingAngle += angleDiff * (0.14 * dt);
       }
 
       // Interpolate speed smoothly
-      s.speed += (s.targetSpeed - s.speed) * 0.12;
+      s.speed += (s.targetSpeed - s.speed) * (0.18 * dt);
+
+      // UPDATE MOVING BARRIERS
+      for (let oi = 0; oi < s.arenaObstacles.length; oi++) {
+        const ob = s.arenaObstacles[oi];
+        if (ob.type !== "moving_barrier") continue;
+        if (ob.moveForward) {
+          ob.moveProgress += ob.moveSpeed;
+          if (ob.moveProgress >= 1) { ob.moveProgress = 1; ob.moveForward = false; }
+        } else {
+          ob.moveProgress -= ob.moveSpeed;
+          if (ob.moveProgress <= 0) { ob.moveProgress = 0; ob.moveForward = true; }
+        }
+        ob.x = ob.moveStartX + (ob.moveEndX - ob.moveStartX) * ob.moveProgress;
+        ob.y = ob.moveStartY + (ob.moveEndY - ob.moveStartY) * ob.moveProgress;
+      }
 
       let skipUpdate = false;
       if (s.hitStopDuration > 0) {
@@ -1023,6 +1292,156 @@ export default function GameCanvas({
           x: Math.max(20, Math.min(arenaWidth - 20, head.x + dx)),
           y: Math.max(20, Math.min(arenaHeight - 20, head.y + dy))
         };
+
+        // Grave obstacle collision — push player away from graves
+        for (let gi = 0; gi < s.terrainTiles.length; gi++) {
+          const grave = s.terrainTiles[gi];
+          if (grave.type !== "grave") continue;
+          const gW = grave.width || 20;
+          const gH = grave.height || 28;
+          if (
+            nextHead.x + 15 > grave.x && nextHead.x - 15 < grave.x + gW &&
+            nextHead.y + 15 > grave.y && nextHead.y - 15 < grave.y + gH
+          ) {
+            // Push away from grave center
+            const pushAngle = Math.atan2(nextHead.y - (grave.y + gH / 2), nextHead.x - (grave.x + gW / 2));
+            nextHead.x += Math.cos(pushAngle) * 3;
+            nextHead.y += Math.sin(pushAngle) * 3;
+            // Clamp again
+            nextHead.x = Math.max(20, Math.min(arenaWidth - 20, nextHead.x));
+            nextHead.y = Math.max(20, Math.min(arenaHeight - 20, nextHead.y));
+            s.screenFlash = Math.max(s.screenFlash, 0.05);
+            triggerHaptic(8);
+            break;
+          }
+        }
+
+        // ARENA OBSTACLE COLLISION — resolve against wall/moving_barrier AABBs
+        const resolveCircleRect = (cx: number, cy: number, cr: number, rx: number, ry: number, rw: number, rh: number) => {
+          const cX = Math.max(rx, Math.min(cx, rx + rw));
+          const cY = Math.max(ry, Math.min(cy, ry + rh));
+          const dxO = cx - cX, dyO = cy - cY;
+          const dSq = dxO * dxO + dyO * dyO;
+          if (dSq >= cr * cr) return { x: cx, y: cy, hit: false };
+          const dist = Math.sqrt(dSq) || 1;
+          const overlap = cr - dist;
+          return {
+            x: cx + (dxO / dist) * overlap,
+            y: cy + (dyO / dist) * overlap,
+            hit: true
+          };
+        };
+        for (let oi = 0; oi < s.arenaObstacles.length; oi++) {
+          const ob = s.arenaObstacles[oi];
+          if (ob.type !== "wall" && ob.type !== "moving_barrier") continue;
+          const res = resolveCircleRect(nextHead.x, nextHead.y, 18, ob.x, ob.y, ob.width, ob.height);
+          if (res.hit) {
+            nextHead.x = res.x;
+            nextHead.y = res.y;
+            triggerHaptic(6);
+            break;
+          }
+        }
+
+        // TERRAIN EFFECTS ON PLAYER
+        s.isOnIce = false;
+        for (let ti = 0; ti < s.terrainTiles.length; ti++) {
+          const tile = s.terrainTiles[ti];
+          const inTile = tile.radius > 0
+            ? Math.hypot(nextHead.x - tile.x, nextHead.y - tile.y) < tile.radius
+            : (tile.width && tile.height
+              ? nextHead.x > tile.x && nextHead.x < tile.x + tile.width &&
+                nextHead.y > tile.y && nextHead.y < tile.y + tile.height
+              : false);
+
+          if (inTile) {
+            s.isOnIce = tile.type === "ice_patch";
+            if (tile.type === "rune_circle") {
+              s.targetSpeed = (4 + speedBonus) + 2;
+            }
+            if (tile.type === "lava_pool" && !s.isShielded) {
+              s.playerHealth -= 1 / 60;
+              s.screenFlash = Math.max(s.screenFlash, 0.08);
+              triggerHaptic(5);
+            }
+            if (tile.type === "poison_bog" && !s.isShielded && selectedForm !== "jade_basilisk") {
+              s.playerHealth -= 0.5 / 60;
+              s.screenFlash = Math.max(s.screenFlash, 0.05);
+            }
+            break;
+          }
+        }
+
+        // Update geysers/vents
+        for (let ti = 0; ti < s.terrainTiles.length; ti++) {
+          const tile = s.terrainTiles[ti];
+          if (tile.type !== "fire_geyser" && tile.type !== "toxic_vent") continue;
+          tile.animTimer++;
+          if (tile.cooldown > 0) {
+            if (tile.animTimer >= tile.cooldown) {
+              tile.animTimer = 0;
+              tile.active = true;
+            }
+            if (tile.active && tile.animTimer > 30) {
+              tile.active = false;
+            }
+          }
+          if (tile.active) {
+            const distToGeyser = Math.hypot(nextHead.x - tile.x, nextHead.y - tile.y);
+            if (distToGeyser < tile.radius + 40 && !s.isShielded) {
+              const dmg = tile.type === "fire_geyser" ? 8 : 4;
+              s.playerHealth -= dmg / 60;
+              s.screenFlash = Math.max(s.screenFlash, 0.12);
+              triggerHaptic(10);
+            }
+          }
+        }
+
+        // SPIKE / TRAP DAMAGE TO PLAYER
+        const headR = 18;
+        for (let oi = 0; oi < s.arenaObstacles.length; oi++) {
+          const ob = s.arenaObstacles[oi];
+          if (ob.type === "wall" || ob.type === "moving_barrier") continue;
+          if (ob.type === "spikes") {
+            ob.spikeAnimTimer++;
+            const ext = Math.sin(ob.spikeAnimTimer * 0.04) * 0.3 + 0.7;
+            const cX = Math.max(ob.x, Math.min(nextHead.x, ob.x + ob.width));
+            const cY = Math.max(ob.y, Math.min(nextHead.y, ob.y + ob.height));
+            const dxS = nextHead.x - cX, dyS = nextHead.y - cY;
+            if (dxS * dxS + dyS * dyS < (headR + 8 * ext) * (headR + 8 * ext) && !s.isShielded) {
+              s.playerHealth -= 1.5 / 60;
+              s.screenFlash = Math.max(s.screenFlash, 0.1);
+              triggerHaptic(8);
+              // Push away slightly
+              const pAngle = Math.atan2(nextHead.y - (ob.y + ob.height / 2), nextHead.x - (ob.x + ob.width / 2));
+              nextHead.x += Math.cos(pAngle) * 2;
+              nextHead.y += Math.sin(pAngle) * 2;
+            }
+          }
+          if (ob.type === "trap") {
+            const cX = Math.max(ob.x, Math.min(nextHead.x, ob.x + ob.width));
+            const cY = Math.max(ob.y, Math.min(nextHead.y, ob.y + ob.height));
+            const dxT = nextHead.x - cX, dyT = nextHead.y - cY;
+            const tDist = Math.hypot(dxT, dyT);
+            const tRadius = Math.max(ob.width, ob.height) / 2 + 10;
+            if (tDist < tRadius && !ob.trapTriggered && ob.trapCooldown <= 0 && !s.isShielded) {
+              ob.trapTriggered = true;
+              ob.trapCooldown = 180;
+              s.playerHealth -= 12;
+              s.shakeAmount = 14;
+              s.screenFlash = Math.max(s.screenFlash, 0.3);
+              triggerHaptic([20, 30, 40]);
+              triggerParticleBurst(nextHead.x, nextHead.y, ob.accentColor, 20);
+              s.glowingRings.push({
+                x: nextHead.x, y: nextHead.y, r: 5, maxR: 100, color: ob.accentColor, alpha: 1
+              });
+              s.floatingTexts.push({
+                x: nextHead.x, y: nextHead.y - 30,
+                text: "TRAP! -12 HP", color: ob.accentColor, life: 45, maxLife: 45, scale: 1.4
+              });
+            }
+          }
+        }
 
         // Add to front of segments
         s.serpentSegments.unshift(nextHead);
@@ -1268,6 +1687,105 @@ export default function GameCanvas({
           }
         }
 
+        // TERRAIN EFFECTS ON ENEMIES
+        let enemyInFog = false;
+        let enemyOnIce = false;
+        // Reset fog stealth for non-assassins each frame
+        if (enemy.type !== "assassin") {
+          enemy.isStealth = false;
+        }
+        for (let ti = 0; ti < s.terrainTiles.length; ti++) {
+          const tile = s.terrainTiles[ti];
+          const inTile = tile.radius > 0
+            ? Math.hypot(enemy.x - tile.x, enemy.y - tile.y) < tile.radius
+            : (tile.width && tile.height
+              ? enemy.x > tile.x && enemy.x < tile.x + tile.width &&
+                enemy.y > tile.y && enemy.y < tile.y + tile.height
+              : false);
+          if (!inTile) continue;
+
+          if (tile.type === "lava_pool") {
+            enemy.hp -= 2 / 60;
+            enemy.flashTimer = Math.max(enemy.flashTimer || 0, 1);
+            if (Math.random() < 0.3) {
+              spawnParticle(
+                enemy.x + (Math.random() - 0.5) * enemy.size,
+                enemy.y + (Math.random() - 0.5) * enemy.size,
+                (Math.random() - 0.5) * 1,
+                -Math.random() * 2,
+                "#f87171",
+                Math.random() * 3 + 1,
+                15
+              );
+            }
+          }
+          if (tile.type === "poison_bog") {
+            enemy.hp -= 0.3 / 60;
+            enemy.flashTimer = Math.max(enemy.flashTimer || 0, 1);
+          }
+          if (tile.type === "ice_patch") {
+            enemyOnIce = true;
+          }
+          if (tile.type === "fog_pocket") {
+            enemyInFog = true;
+          }
+          if (tile.type === "fire_geyser" && tile.active) {
+            const distG = Math.hypot(enemy.x - tile.x, enemy.y - tile.y);
+            if (distG < tile.radius + 40) {
+              enemy.hp -= 8 / 60;
+              enemy.flashTimer = Math.max(enemy.flashTimer || 0, 3);
+            }
+          }
+          if (tile.type === "toxic_vent" && tile.active) {
+            const distV = Math.hypot(enemy.x - tile.x, enemy.y - tile.y);
+            if (distV < tile.radius + 50) {
+              enemy.hp -= 4 / 60;
+              enemy.flashTimer = Math.max(enemy.flashTimer || 0, 2);
+            }
+          }
+        }
+
+        // Mark enemy as in fog for stealth rendering
+        if (enemyInFog && enemy.type !== "boss") {
+          enemy.isStealth = true;
+        }
+
+        // ARENA OBSTACLE COLLISION FOR ENEMIES
+        for (let oi = 0; oi < s.arenaObstacles.length; oi++) {
+          const ob = s.arenaObstacles[oi];
+          const oCx = enemy.x, oCy = enemy.y, oCr = enemy.size;
+          if (ob.type === "wall" || ob.type === "moving_barrier") {
+            const cX = Math.max(ob.x, Math.min(oCx, ob.x + ob.width));
+            const cY = Math.max(ob.y, Math.min(oCy, ob.y + ob.height));
+            const dxO = oCx - cX, dyO = oCy - cY;
+            const dSq = dxO * dxO + dyO * dyO;
+            if (dSq < oCr * oCr) {
+              const dist = Math.sqrt(dSq) || 1;
+              const overlap = oCr - dist;
+              enemy.x += (dxO / dist) * overlap;
+              enemy.y += (dyO / dist) * overlap;
+            }
+          }
+          if (ob.type === "spikes") {
+            const cX = Math.max(ob.x, Math.min(oCx, ob.x + ob.width));
+            const cY = Math.max(ob.y, Math.min(oCy, ob.y + ob.height));
+            const dxS = oCx - cX, dyS = oCy - cY;
+            if (dxS * dxS + dyS * dyS < (oCr + 6) * (oCr + 6)) {
+              enemy.hp -= 1.5 / 60;
+              enemy.flashTimer = Math.max(enemy.flashTimer || 0, 1);
+            }
+          }
+          if (ob.type === "trap" && ob.trapTriggered) {
+            const cX = Math.max(ob.x, Math.min(oCx, ob.x + ob.width));
+            const cY = Math.max(ob.y, Math.min(oCy, ob.y + ob.height));
+            const distT = Math.hypot(oCx - cX, oCy - cY);
+            if (distT < Math.max(ob.width, ob.height) && !ob.trapTriggered && ob.trapCooldown > 150) {
+              enemy.hp -= 10;
+              enemy.flashTimer = Math.max(enemy.flashTimer || 0, 5);
+            }
+          }
+        }
+
         // Check if caught in cyclone
         if (s.cycloneActive) {
           const dxC = enemy.x - s.cyclonePos.x;
@@ -1345,7 +1863,8 @@ export default function GameCanvas({
         }
 
         // Steer towards closest segment or head
-        const speedFactor = s.isSlowed ? 0.25 : 1.0;
+        let speedFactor = s.isSlowed ? 0.25 : 1.0;
+        if (enemyOnIce) speedFactor *= 0.5;
         const moveSpeed = enemy.speed * speedFactor;
 
         // 1. Separation force (Cooperation - don't cluster in a single spot)
@@ -1867,6 +2386,23 @@ export default function GameCanvas({
           else if (enemy.type === "assassin") scoreReward = 400;
           else if (enemy.type === "necromancer") scoreReward = 500;
 
+          // Lava kills grant bonus score
+          const inLava = s.terrainTiles.some(t => t.type === "lava_pool" &&
+            Math.hypot(enemy.x - t.x, enemy.y - t.y) < t.radius);
+          if (inLava && enemy.type !== "boss") {
+            const bonus = Math.floor(scoreReward * 0.5);
+            scoreReward += bonus;
+            s.floatingTexts.push({
+              x: enemy.x,
+              y: enemy.y - 30,
+              text: `+${bonus} LAVA BONUS`,
+              color: "#f87171",
+              life: 40,
+              maxLife: 40,
+              scale: 1.1
+            });
+          }
+
           s.score += scoreReward;
           triggerParticleBurst(enemy.x, enemy.y, enemy.type === "boss" ? "#7d000a" : enemy.type === "skeleton" ? "#e2e8f0" : "#bef264", 20);
           
@@ -2171,18 +2707,21 @@ export default function GameCanvas({
         }));
       }
 
-      // 10. DRAWING EVERYTHING (CANVAS RENDERER)
+      } // end `if (elapsed >= frameInterval - 1)` physics tick
+
+      // 10. DRAWING EVERYTHING (CANVAS RENDERER) — runs every animation frame
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
       ctx.save();
       
       // CAMERA SYSTEM (Center camera smooth follow with interpolation & boundary clamping)
-      const targetCamX = head.x - dimensions.width / 2;
-      const targetCamY = head.y - dimensions.height / 2;
+      const camHead = s.serpentSegments[0] || s.cameraPos;
+      const targetCamX = camHead.x - dimensions.width / 2;
+      const targetCamY = camHead.y - dimensions.height / 2;
 
       // Smooth camera interpolation (lerp)
-      s.cameraPos.x += (targetCamX - s.cameraPos.x) * 0.08;
-      s.cameraPos.y += (targetCamY - s.cameraPos.y) * 0.08;
+      s.cameraPos.x += (targetCamX - s.cameraPos.x) * 0.12;
+      s.cameraPos.y += (targetCamY - s.cameraPos.y) * 0.12;
 
       // Arena boundary clamping (prevents showing outer space)
       const minCamX = 0;
@@ -2230,6 +2769,416 @@ export default function GameCanvas({
       ctx.font = "bold 24px Orbitron";
       ctx.fillText("SERPENT VAULT I", 100, 150);
       ctx.fillText("ANCIENT ROYAL COURT", arenaWidth - 400, arenaHeight - 150);
+
+      // TERRAIN FEATURES RENDERING
+      s.terrainTiles.forEach((tile) => {
+        ctx.save();
+
+        if (tile.type === "rune_circle") {
+          const pulse = 0.8 + Math.sin(tile.animTimer * 0.03) * 0.2;
+          const grad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, tile.radius * pulse);
+          grad.addColorStop(0, "rgba(78, 222, 163, 0.15)");
+          grad.addColorStop(0.6, "rgba(78, 222, 163, 0.08)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius * pulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(78, 222, 163, ${0.2 + Math.sin(tile.animTimer * 0.05) * 0.1})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 12]);
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius * 0.6 * pulse, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Rune symbols
+          ctx.fillStyle = `rgba(78, 222, 163, ${0.15 + Math.sin(tile.animTimer * 0.04) * 0.08})`;
+          ctx.font = "18px serif";
+          ctx.textAlign = "center";
+          ctx.fillText("ᛉ", tile.x, tile.y + 6);
+        }
+
+        if (tile.type === "ice_patch") {
+          const w = tile.width || 100;
+          const h = tile.height || 100;
+          ctx.fillStyle = "rgba(125, 211, 252, 0.12)";
+          ctx.beginPath();
+          const r = 8;
+          ctx.moveTo(tile.x + r, tile.y);
+          ctx.lineTo(tile.x + w - r, tile.y);
+          ctx.quadraticCurveTo(tile.x + w, tile.y, tile.x + w, tile.y + r);
+          ctx.lineTo(tile.x + w, tile.y + h - r);
+          ctx.quadraticCurveTo(tile.x + w, tile.y + h, tile.x + w - r, tile.y + h);
+          ctx.lineTo(tile.x + r, tile.y + h);
+          ctx.quadraticCurveTo(tile.x, tile.y + h, tile.x, tile.y + h - r);
+          ctx.lineTo(tile.x, tile.y + r);
+          ctx.quadraticCurveTo(tile.x, tile.y, tile.x + r, tile.y);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(125, 211, 252, 0.25)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Frost hex pattern
+          for (let hi = 0; hi < 3; hi++) {
+            for (let hj = 0; hj < 3; hj++) {
+              const hx = tile.x + 15 + hi * (w - 30) / 2;
+              const hy = tile.y + 15 + hj * (h - 30) / 2;
+              ctx.strokeStyle = "rgba(125, 211, 252, 0.08)";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              for (let side = 0; side < 6; side++) {
+                const a = (Math.PI / 3) * side - Math.PI / 6;
+                const px = hx + Math.cos(a) * 8;
+                const py = hy + Math.sin(a) * 8;
+                side === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+              }
+              ctx.closePath();
+              ctx.stroke();
+            }
+          }
+        }
+
+        if (tile.type === "fog_pocket") {
+          const fogPulse = 0.9 + Math.sin(tile.animTimer * 0.02) * 0.1;
+          const grad = ctx.createRadialGradient(tile.x, tile.y, 5, tile.x, tile.y, tile.radius * fogPulse);
+          grad.addColorStop(0, "rgba(30, 40, 30, 0.55)");
+          grad.addColorStop(0.5, "rgba(30, 40, 30, 0.35)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius * fogPulse, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (tile.type === "grave") {
+          const gW = tile.width || 20;
+          const gH = tile.height || 28;
+          // Tombstone body
+          ctx.fillStyle = "rgba(60, 55, 50, 0.85)";
+          ctx.beginPath();
+          ctx.moveTo(tile.x + 3, tile.y);
+          ctx.quadraticCurveTo(tile.x + gW / 2, tile.y - 8, tile.x + gW - 3, tile.y);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(45, 42, 38, 0.9)";
+          ctx.fillRect(tile.x + 1, tile.y + 2, gW - 2, gH - 2);
+
+          // Epitaph scratch
+          ctx.fillStyle = "rgba(100, 90, 80, 0.5)";
+          ctx.font = "6px serif";
+          ctx.textAlign = "center";
+          ctx.fillText("RIP", tile.x + gW / 2, tile.y + gH / 2 + 2);
+        }
+
+        if (tile.type === "lava_pool") {
+          const bubble = Math.sin(tile.animTimer * 0.08) * 3;
+          const grad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, tile.radius);
+          grad.addColorStop(0, "rgba(255, 127, 116, 0.35)");
+          grad.addColorStop(0.5, "rgba(248, 113, 113, 0.15)");
+          grad.addColorStop(0.8, "rgba(200, 60, 30, 0.08)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y + bubble, tile.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Ember particles on lava surface
+          if (Math.random() < 0.3) {
+            const ax = tile.x + (Math.random() - 0.5) * tile.radius * 1.5;
+            const ay = tile.y + (Math.random() - 0.5) * tile.radius * 1.5;
+            ctx.fillStyle = `rgba(255, 200, 100, ${Math.random() * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(ax, ay, Math.random() * 2 + 1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (tile.type === "fire_geyser") {
+          const isActive = tile.active;
+          // Vent base
+          ctx.fillStyle = "rgba(60, 35, 30, 0.8)";
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (isActive) {
+            // Flame column
+            const flameH = 40 + Math.sin(tile.animTimer * 0.5) * 15;
+            const grad = ctx.createRadialGradient(tile.x, tile.y - flameH / 2, 2, tile.x, tile.y - flameH / 2, flameH / 2 + 10);
+            grad.addColorStop(0, "rgba(255, 200, 50, 0.5)");
+            grad.addColorStop(0.4, "rgba(255, 100, 30, 0.3)");
+            grad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = grad;
+            ctx.fillRect(tile.x - 25, tile.y - flameH - 10, 50, flameH + 20);
+
+            // Core flame
+            ctx.fillStyle = "rgba(255, 220, 100, 0.6)";
+            ctx.beginPath();
+            ctx.arc(tile.x, tile.y - flameH + 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sparks
+            for (let si = 0; si < 3; si++) {
+              const sx = tile.x + (Math.random() - 0.5) * 30;
+              const sy = tile.y - Math.random() * flameH;
+              ctx.fillStyle = `rgba(255, 200, 50, ${Math.random() * 0.5})`;
+              ctx.beginPath();
+              ctx.arc(sx, sy, Math.random() * 2 + 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Warning glow
+          const glowIntensity = isActive ? 0.3 : 0.08;
+          const glowGrad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, tile.radius + 30);
+          glowGrad.addColorStop(0, `rgba(255, 127, 116, ${glowIntensity})`);
+          glowGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = glowGrad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius + 30, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (tile.type === "poison_bog") {
+          const bogPulse = 0.95 + Math.sin(tile.animTimer * 0.03) * 0.05;
+          const grad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, tile.radius * bogPulse);
+          grad.addColorStop(0, "rgba(190, 242, 100, 0.2)");
+          grad.addColorStop(0.5, "rgba(132, 200, 64, 0.12)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius * bogPulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Bubbles
+          if (Math.random() < 0.15) {
+            const bx = tile.x + (Math.random() - 0.5) * tile.radius * 1.2;
+            const by = tile.y + (Math.random() - 0.5) * tile.radius * 1.2;
+            ctx.strokeStyle = "rgba(190, 242, 100, 0.2)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(bx, by, Math.random() * 3 + 1, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        if (tile.type === "toxic_vent") {
+          const isActive = tile.active;
+          // Vent base
+          ctx.fillStyle = "rgba(40, 50, 30, 0.8)";
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Gas cloud when active
+          if (isActive) {
+            const cloudR = tile.radius + 30 + Math.sin(tile.animTimer * 0.3) * 10;
+            const grad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, cloudR);
+            grad.addColorStop(0, "rgba(132, 204, 22, 0.3)");
+            grad.addColorStop(0.6, "rgba(132, 204, 22, 0.12)");
+            grad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(tile.x, tile.y, cloudR, 0, Math.PI * 2);
+            ctx.fill();
+
+            for (let gi = 0; gi < 4; gi++) {
+              const gx = tile.x + (Math.random() - 0.5) * 40;
+              const gy = tile.y + (Math.random() - 0.5) * 40;
+              ctx.fillStyle = `rgba(132, 204, 22, ${Math.random() * 0.15})`;
+              ctx.beginPath();
+              ctx.arc(gx, gy, Math.random() * 6 + 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Warning glow
+          const warningGrad = ctx.createRadialGradient(tile.x, tile.y, 2, tile.x, tile.y, tile.radius + 20);
+          warningGrad.addColorStop(0, `rgba(190, 242, 100, ${isActive ? 0.25 : 0.06})`);
+          warningGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = warningGrad;
+          ctx.beginPath();
+          ctx.arc(tile.x, tile.y, tile.radius + 20, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Animate timer
+        tile.animTimer++;
+        ctx.restore();
+      });
+
+      // ARENA OBSTACLES RENDERING
+      s.arenaObstacles.forEach((ob) => {
+        ctx.save();
+        const cx = ob.x + ob.width / 2;
+        const cy = ob.y + ob.height / 2;
+
+        if (ob.type === "wall") {
+          // Main body
+          ctx.fillStyle = ob.color;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = ob.accentColor;
+          ctx.beginPath();
+          const r = 4;
+          ctx.moveTo(ob.x + r, ob.y);
+          ctx.lineTo(ob.x + ob.width - r, ob.y);
+          ctx.quadraticCurveTo(ob.x + ob.width, ob.y, ob.x + ob.width, ob.y + r);
+          ctx.lineTo(ob.x + ob.width, ob.y + ob.height - r);
+          ctx.quadraticCurveTo(ob.x + ob.width, ob.y + ob.height, ob.x + ob.width - r, ob.y + ob.height);
+          ctx.lineTo(ob.x + r, ob.y + ob.height);
+          ctx.quadraticCurveTo(ob.x, ob.y + ob.height, ob.x, ob.y + ob.height - r);
+          ctx.lineTo(ob.x, ob.y + r);
+          ctx.quadraticCurveTo(ob.x, ob.y, ob.x + r, ob.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Accent border glow
+          ctx.strokeStyle = ob.accentColor;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.003) * 0.15;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Surface rune/scratch detail
+          ctx.fillStyle = "rgba(255,255,255,0.04)";
+          for (let ri = 0; ri < 3; ri++) {
+            ctx.fillRect(ob.x + 5 + ri * 12, ob.y + 10, 6, ob.height - 20);
+          }
+        }
+
+        if (ob.type === "spikes") {
+          const ext = Math.sin(ob.spikeAnimTimer * 0.04) * 0.3 + 0.7;
+          const count = Math.floor(ob.width / 8);
+          // Base platform
+          ctx.fillStyle = "rgba(40,35,30,0.7)";
+          ctx.fillRect(ob.x, ob.y + ob.height * 0.5, ob.width, ob.height * 0.5);
+
+          for (let si = 0; si < count; si++) {
+            const sx = ob.x + (si + 0.5) * (ob.width / count);
+            const sh = ob.height * ext;
+            ctx.fillStyle = ob.color;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = ob.accentColor;
+            ctx.beginPath();
+            ctx.moveTo(sx - 4, ob.y + ob.height * 0.5);
+            ctx.lineTo(sx, ob.y + ob.height * 0.5 - sh);
+            ctx.lineTo(sx + 4, ob.y + ob.height * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          // Glow line on base
+          ctx.strokeStyle = `rgba(255,255,255,${0.15 * ext})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(ob.x, ob.y + ob.height * 0.5);
+          ctx.lineTo(ob.x + ob.width, ob.y + ob.height * 0.5);
+          ctx.stroke();
+        }
+
+        if (ob.type === "trap") {
+          const tR = Math.max(ob.width, ob.height) / 2;
+          const armed = !ob.trapTriggered && ob.trapCooldown <= 0;
+          const pulse = armed ? 0.8 + Math.sin(Date.now() * 0.005) * 0.2 : 0.5;
+
+          // Ground glow
+          const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, tR * pulse);
+          grad.addColorStop(0, armed ? "rgba(255,255,255,0.08)" : "rgba(100,100,100,0.05)");
+          grad.addColorStop(0.5, armed ? `${ob.accentColor.replace(")", ",0.12)").replace("rgb", "rgba")}` : "rgba(80,80,80,0.06)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, tR * pulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rim circle
+          ctx.strokeStyle = armed ? ob.accentColor : "rgba(100,100,100,0.2)";
+          ctx.lineWidth = armed ? 2 : 1;
+          ctx.globalAlpha = armed ? 0.6 : 0.2;
+          ctx.setLineDash(armed ? [] : [4, 4]);
+          ctx.beginPath();
+          ctx.arc(cx, cy, tR * pulse * 0.7, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          // Center rune
+          if (armed) {
+            ctx.fillStyle = ob.accentColor;
+            ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.004) * 0.15;
+            ctx.font = "16px serif";
+            ctx.textAlign = "center";
+            ctx.fillText("ⵔ", cx, cy + 6);
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        if (ob.type === "moving_barrier") {
+          // Trail / motion blur behind direction
+          const trailLen = 12;
+          const tDx = ob.moveEndX - ob.moveStartX;
+          const tDy = ob.moveEndY - ob.moveStartY;
+          const tLen = Math.hypot(tDx, tDy) || 1;
+          const tNx = tDx / tLen;
+          const tNy = tDy / tLen;
+          for (let ti = 1; ti <= 4; ti++) {
+            const alpha = 0.08 / ti;
+            ctx.fillStyle = ob.color.replace(")", `,${alpha})`).replace("rgb", "rgba");
+            ctx.fillRect(ob.x - tNx * ti * trailLen, ob.y - tNy * ti * trailLen, ob.width, ob.height);
+          }
+
+          // Main body
+          ctx.fillStyle = ob.color;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = ob.accentColor;
+          ctx.beginPath();
+          const mr = 4;
+          ctx.moveTo(ob.x + mr, ob.y);
+          ctx.lineTo(ob.x + ob.width - mr, ob.y);
+          ctx.quadraticCurveTo(ob.x + ob.width, ob.y, ob.x + ob.width, ob.y + mr);
+          ctx.lineTo(ob.x + ob.width, ob.y + ob.height - mr);
+          ctx.quadraticCurveTo(ob.x + ob.width, ob.y + ob.height, ob.x + ob.width - mr, ob.y + ob.height);
+          ctx.lineTo(ob.x + mr, ob.y + ob.height);
+          ctx.quadraticCurveTo(ob.x, ob.y + ob.height, ob.x, ob.y + ob.height - mr);
+          ctx.lineTo(ob.x, ob.y + mr);
+          ctx.quadraticCurveTo(ob.x, ob.y, ob.x + mr, ob.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Direction arrow
+          ctx.strokeStyle = ob.accentColor;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(cx - tNx * 20, cy - tNy * 20);
+          ctx.lineTo(cx + tNx * 20, cy + tNy * 20);
+          ctx.stroke();
+          // Arrowhead
+          const headSize = 8;
+          ctx.beginPath();
+          ctx.moveTo(cx + tNx * 20 + tNy * headSize, cy + tNy * 20 - tNx * headSize);
+          ctx.lineTo(cx + tNx * 20, cy + tNy * 20);
+          ctx.lineTo(cx + tNx * 20 - tNy * headSize, cy + tNy * 20 + tNx * headSize);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Edge accent glow
+          ctx.strokeStyle = ob.accentColor;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.2;
+          ctx.strokeRect(ob.x, ob.y, ob.width, ob.height);
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.restore();
+      });
 
       // A. DRAW SOULS WITH LIGHT POOLS
       s.souls.forEach((soul) => {
@@ -2793,11 +3742,18 @@ export default function GameCanvas({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     };
+    s.mouseActive = true;
   };
 
   const handleMouseLeave = () => {
     const s = stateRef.current;
     s.mousePos = { x: 0, y: 0 };
+    s.mouseActive = false;
+  };
+
+  const handleMouseEnter = () => {
+    const s = stateRef.current;
+    s.mouseActive = true;
   };
 
   const GAMEPLAY_TUTORIAL_STEPS = [
@@ -2859,6 +3815,7 @@ export default function GameCanvas({
         height={dimensions.height}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onMouseEnter={handleMouseEnter}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

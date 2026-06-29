@@ -105,9 +105,12 @@ class AudioManagerClass {
       masterVolume: newSettings?.masterVolume ?? 80,
       musicVolume: newSettings?.musicVolume ?? 80,
       sfxVolume: newSettings?.sfxVolume ?? 80,
-      cameraShake: newSettings?.cameraShake ?? true,
-      visualEffects: newSettings?.visualEffects ?? "HIGH",
-      showDamageNumbers: newSettings?.showDamageNumbers ?? true,
+      brightness: newSettings?.brightness ?? 100,
+      highFidelity: newSettings?.highFidelity ?? true,
+      motionBlur: newSettings?.motionBlur ?? true,
+      hapticFeedback: newSettings?.hapticFeedback ?? true,
+      invertY: newSettings?.invertY ?? false,
+      language: newSettings?.language ?? "en"
     };
     this.applyGains();
   }
