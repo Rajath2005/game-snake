@@ -4,8 +4,8 @@
   <img src="https://img.shields.io/badge/Version-1.0.0-orange.svg?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome" />
   <a href="https://www.codetriage.com/rajath2005/game-snake"><img src="https://www.codetriage.com/rajath2005/game-snake/badges/users.svg?count=1" alt="CodeTriage badge for rajath2005/game-snake" /></a>
-  <img src="https://img.shields.io/badge/React-18-61DAFB.svg?style=for-the-badge&logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/Tailwind-3.0-38B2AC.svg?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB.svg?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Tailwind-4.0-38B2AC.svg?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
 </div>
 
 <h1 align="center">
@@ -86,12 +86,12 @@ We've open-sourced this project to allow the community to build new biomes, enem
 
 This project leverages modern Web technologies to deliver a high-performance gaming experience in the browser:
 
-- **Framework**: [React 18](https://react.dev/)
+- **Framework**: [React 19](https://react.dev/)
 - **Build Tool**: [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Game Engine**: Custom HTML5 `<canvas>` rendering loop (Zero external game engine dependencies)
 - **State Management**: React Hooks + Context + Persistent LocalStorage for game saves
-- **Icons**: [Google Material Symbols](https://fonts.google.com/icons)
+- **Icons**: [lucide-react](https://lucide.dev/)
 - **Deployment**: Optimized for standard static hosting (Vercel, Netlify, Cloud Run, GitHub Pages)
 
 ---
@@ -151,8 +151,7 @@ serpent-kingdom/
 │   └── types.ts         # TypeScript interfaces and game data definitions
 ├── public/              # Static assets (images, audio files, favicon)
 ├── package.json         # Dependencies and scripts
-├── vite.config.ts       # Vite build configuration
-└── tailwind.config.js   # Tailwind theme definitions
+└── vite.config.ts       # Vite build configuration (Tailwind v4 via @tailwindcss/vite)
 ```
 
 ---
