@@ -772,7 +772,7 @@ export default function App() {
     // 4. Grant Skill Points based on performance: 1 point per 8,000 points scored, capped at 3 per run
     const earnedSkillPoints = Math.min(3, Math.floor(finalScore / 8000));
 
-    setActiveRunScore(finalScore);
+    setActiveRunScore(finalScore);  // Set score first
     setActiveRunCoins(calculatedCoins);
     setActiveRunXp(xp);
     setJustDefeatedBoss(defBoss);
@@ -843,7 +843,8 @@ export default function App() {
     };
 
     saveToLocalStorage(updated);
-    setShowGameOver(true);
+    // Delay showing game over to ensure activeRunScore state is committed first
+    setTimeout(() => setShowGameOver(true), 0);
 
     if (leveledUp) {
       setTimeout(() => {
