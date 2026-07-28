@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   GameSaveState, 
   INITIAL_SAVE_STATE, 
@@ -43,6 +43,7 @@ export default function App() {
   const [selectedBiome, setSelectedBiome] = useState<Biome>(BIOMES[0]);
   const [isPaused, setIsPaused] = useState(false);
   const [activeRunScore, setActiveRunScore] = useState(0);
+  const gameOverScoreRef = useRef(0); // Ref to avoid stale score on first game over
   const [activeRunCoins, setActiveRunCoins] = useState(0);
   const [activeRunXp, setActiveRunXp] = useState(0);
   
@@ -743,6 +744,7 @@ export default function App() {
     setShowGameOver(false);
     setJustDefeatedBoss(false);
     setRunStats(null);
+    gameOverScoreRef.current = 0;
     setScreen("GAMEPLAY");
   };
 
@@ -772,6 +774,7 @@ export default function App() {
     // 4. Grant Skill Points based on performance: 1 point per 8,000 points scored, capped at 3 per run
     const earnedSkillPoints = Math.min(3, Math.floor(finalScore / 8000));
 
+    gameOverScoreRef.current = finalScore;
     setActiveRunScore(finalScore);
     setActiveRunCoins(calculatedCoins);
     setActiveRunXp(xp);
@@ -1170,7 +1173,7 @@ export default function App() {
       {/* 5. GAME OVER MODAL OVERLAY */}
       {showGameOver && (
         <GameOver
-          score={activeRunScore}
+          score={gameOverScoreRef.current}
           highScore={saveState.highScore}
           isNewRecord={activeRunScore >= saveState.highScore}
             coinsEarned={activeRunCoins}
