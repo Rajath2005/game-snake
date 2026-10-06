@@ -862,8 +862,8 @@ export default function MainDashboard({
                     </div>
 
                     {saveState.dailyChallengeClaimed ? (
-                      <span className="px-4 py-2 bg-surface-container text-on-surface-variant text-xs font-label-numeric rounded font-bold border border-outline-variant/30">
-                        CLAIMED
+                      <span className="px-4 py-2 bg-surface-container text-on-surface-variant text-xs font-label-numeric rounded font-bold border border-outline-variant/30 opacity-70">
+                        CLAIMED ✓
                       </span>
                     ) : (
                       <button
@@ -913,8 +913,8 @@ export default function MainDashboard({
 
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                           {quest.claimed ? (
-                            <span className="px-4 py-2 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/20">
-                              CLAIMED
+                            <span className="px-4 py-2 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/20 opacity-70">
+                              CLAIMED ✓
                             </span>
                           ) : quest.completed ? (
                             <button
@@ -1360,7 +1360,7 @@ export default function MainDashboard({
                         <div className="w-full">
                           {isClaimed ? (
                             <span className="text-[10px] bg-surface-container border border-outline-variant/20 py-1 rounded text-on-surface-variant/70 font-bold uppercase tracking-wider block">
-                              CLAIMED
+                              CLAIMED ✓
                             </span>
                           ) : isAvailable ? (
                             <button className="w-full py-1 bg-secondary text-[#002113] hover:bg-secondary-fixed rounded text-[10px] font-bold uppercase tracking-wider animate-bounce cursor-pointer">
@@ -1471,8 +1471,8 @@ export default function MainDashboard({
 
                   <div className="flex-shrink-0">
                     {saveState.dailyChallengeClaimed ? (
-                      <span className="px-5 py-2.5 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/30">
-                        CLAIMED
+                      <span className="px-5 py-2.5 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/30 opacity-70">
+                        CLAIMED ✓
                       </span>
                     ) : (
                       <button
@@ -1521,8 +1521,8 @@ export default function MainDashboard({
 
                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                           {quest.claimed ? (
-                            <span className="px-4 py-2 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/20">
-                              CLAIMED
+                            <span className="px-4 py-2 bg-surface-container text-xs font-label-numeric rounded font-bold border border-outline-variant/20 opacity-70">
+                              CLAIMED ✓
                             </span>
                           ) : quest.completed ? (
                             <button
